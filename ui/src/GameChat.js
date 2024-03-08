@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Stomp } from '@stomp/stompjs'
 import SockJS from 'sockjs-client';
+import './GameChat.css';
 
 function GameChat() {
     const [username, setUsername] = useState('');
@@ -27,25 +28,9 @@ function GameChat() {
         newClient.connect({}, () => {
             console.log("Connected to websocket...");
             newClient.subscribe('/topic/public', (message) => {
-                console.log('Received Message: ' + message.body);
-
                 //working with the message received
                 const receivedMsg = JSON.parse(message.body);
-                var msg = "";
-                //if someone joined
-                if (receivedMsg.type === 'JOIN') {
-                    msg = `@${receivedMsg.sender} joined the chat!`;
-                }
-                //if a message is sent
-                else if (receivedMsg.type === 'CHAT') {
-                    msg = `@${receivedMsg.sender}: ${receivedMsg.content}`;
-                }
-
-                //if someone left
-                //.... to be done later ....    
-
-                console.log(msg);
-                setMessages((prevMsgs) => [...prevMsgs, msg]);
+                setMessages((prevMsgs) => [...prevMsgs, receivedMsg]);
             });
 
             newClient.send("/app/battleship/chat", {}, JSON.stringify({
@@ -68,17 +53,19 @@ function GameChat() {
 
     const removeWebSocketConnection = () => {
         if (client) {
-            //we can do something for users leaving the chat
-            // client.send("/app/battleship/chat", {}, JSON.stringify({
-            //     'sender': username,
-            //     'type': 'LEAVE'
-            // }));
+            //sending a msg before leaving the chat
+            client.send("/app/battleship/chat", {}, JSON.stringify({
+                'sender': username,
+                'type': 'LEAVE'
+            }));
             client.deactivate();
             setClient(null);
             console.log('Websocket connection deactivated...');
+
+            //resetting the username field
             setUsername('');
             chatUsernameRef.current.value = '';
-            chatUsernameRef.current.focus();
+            chatUsernameRef.current.focus(); //doesn't work yet
         }
     }
 
@@ -92,7 +79,6 @@ function GameChat() {
             setChatMessage('');
             chatMessageRef.current.value = '';
             chatMessageRef.current.focus();
-            //TODO: turn focus back on the input field
         }
     }
 
@@ -107,6 +93,11 @@ function GameChat() {
             sendChatMessage();
         }
     }
+
+    //assign colors to each participant?? - we need to keep a list of all the participants in that case
+     //If left the chat, remove the option to show new texts and remove the ability to send new texts, but keep the old texts on. If rejoining the chat, start the chat afresh
+    //make the topic name and url name better and more aligned
+    //make chatscreen 1/3 on the right vertically and scrollable
 
     return (
         <div>
@@ -124,16 +115,33 @@ function GameChat() {
             </div>
 
             <br />
-
             <div className={joinedChat ? 'chatWindow' : 'd-none'}>
-                <div className="card mb-2">
-                    <div>Your chat will be visible here...</div>
+                <div className="card mb-2 p-2">
                     <div className="card-body">
-                        {messages.map((msg, index) => {
-                            return <div key={index}>{msg}</div>
+                        {messages.map((receivedMsg, index) => {
+                            if(receivedMsg.type === 'CHAT'){
+                                //if the user is sending the msg, that should display to the right. If the message is from someone else it's rendered on the left
+                                if(receivedMsg.sender === username){
+                                    return <p className="fst-normal chat-text text-end mb-1" key={index}>
+                                    <span className='text-secondary'>{receivedMsg.sender}: </span>{receivedMsg.content}</p>
+                                }else{
+                                    return <p className="fst-normal chat-text text-start mb-1" key={index}>
+                                    <span className='text-secondary'>{receivedMsg.sender}:  </span>{receivedMsg.content}</p>
+                                }
+                                
+                            }else if(receivedMsg.type === 'JOIN'){
+                                return <p className="fst-italic fw-lighter text-muted text-center chat-notification mb-2 mt-1" key={index}>
+                                    @{receivedMsg.sender} has joined the chat!</p>
+                            }else if(receivedMsg.type === 'LEAVE'){
+                                return <p className="fst-italic fw-lighter text-muted text-center chat-notification mb-2 mt-1" key={index}>
+                                    @{receivedMsg.sender} has left the chat!</p>
+                            }else{
+                                console.log(`Wrong msg type: ${receivedMsg.type}. Ignoring this!`)
+                                return <div/>
+                            }
                         })}
                     </div>
-                    <div className="input-group p-2 w-75 mx-auto">
+                    <div className="input-group p-2">
                         <input type="text" className="form-control" placeholder="Type your message..." aria-label="Type your message..." aria-describedby="input-chat-message"
                             defaultValue={chatMessage} ref={chatMessageRef} onChange={(e) => setChatMessage(e.target.value)} onKeyDown={handleEnterForMessageSent}>
                         </input>

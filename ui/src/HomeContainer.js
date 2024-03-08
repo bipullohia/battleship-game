@@ -27,10 +27,10 @@ function Body(){
     return(
         <Container fluid>
             <Row style={{ height: '100vh' }}>
-                <Col className='gameplay-bg'>
+                <Col className='gameplay-bg col-8'>
                     <GamePlay/>
                 </Col>
-                <Col className='gamechat-bg'>
+                <Col className='gamechat-bg col-4'>
                     <GameChat/>
                 </Col>
             </Row>
