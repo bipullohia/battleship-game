@@ -96,7 +96,8 @@ function GameChat() {
             sendChatMessage();
         }
     }
-
+    
+    //TODOs
     //make the topic name and url name better and more aligned
     //make chatscreen 1/3 on the right vertically and scrollable
 

@@ -7,30 +7,28 @@ import Col from 'react-bootstrap/Col';
 function HomeContainer(){
     return(
         <div style={{ height: '100vh' }}>
-            <Header />
-            <br />
             <Body />
         </div>
     )
 }
 
-function Header(){
-    return(
-        <div>
-            <h2>BattleShip</h2>
-            <h6>You can play the classic game of BattleShip here while chatting along with your friends!</h6>
-        </div>
-    )
-}
+// function Header(){
+//     return(
+//         <div>
+//             <h2>BattleShip</h2>
+//             <h6>You can play the classic game of BattleShip here while chatting along with your friends!</h6>
+//         </div>
+//     )
+// }
 
 function Body(){
     return(
         <Container fluid>
             <Row style={{ height: '100vh' }}>
-                <Col className='gameplay-bg col-8'>
+                <Col className='gameplay-bg col-9'>
                     <GamePlay/>
                 </Col>
-                <Col className='gamechat-bg col-4'>
+                <Col className='gamechat-bg col-3'>
                     <GameChat/>
                 </Col>
             </Row>

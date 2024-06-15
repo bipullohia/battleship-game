@@ -9,3 +9,19 @@
 .gamechat-bg{
 background-color: rgb(212, 206, 206);
 }
+
+.blink { 
+  animation: blink-animation 1s infinite; 
+} 
+  
+@keyframes blink-animation { 
+  0% { 
+    opacity: 1; 
+  } 
+  50% { 
+    opacity: 0; 
+  } 
+  100% { 
+    opacity: 1; 
+  } 
+}

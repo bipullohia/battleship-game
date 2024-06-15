@@ -12,7 +12,7 @@ const Grid = ({ rows, cols }) => {
             const row = [];
             for(let j=0; j<cols; j++){
                 row.push(
-                    <td cell-id={`${i}:${j}`} onClick={(e) => alert(e.currentTarget.getAttribute("cell-id"))} className="p-4" style={{maxWidth: '10%', maxHeight: '10%'}}></td>
+                    <td cell-id={`${i}:${j}`} className="p-4" onClick={() => alert('Hey!!')} style={{maxWidth: '10%', maxHeight: '10%'}}>{`${i}:${j}`}</td>
                 );
             }
             grid.push(
