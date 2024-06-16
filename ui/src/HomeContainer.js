@@ -1,4 +1,4 @@
-import GameChat from './GameChat';
+import GameChat from './gamechat/GameChat';
 import GamePlay from './gameplay/GamePlay';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -36,4 +36,9 @@ function Body(){
     )
 }
 
+/*Advanced features to think of:
+    1. dark mode support
+    2. cert on ws connection
+
+    */
 export default HomeContainer;

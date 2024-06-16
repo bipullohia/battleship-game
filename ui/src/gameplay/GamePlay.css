@@ -1,0 +1,27 @@
+.cell-bg-invalidposition:hover {
+    background-color: salmon;
+} 
+
+.cell-bg-validposition {
+    background-color: greenyellow !important;
+}
+
+.cell-bg-placedposition-carrier {
+    background-color:  #dc3545 !important;
+} 
+
+.cell-bg-placedposition-battleship {
+    background-color: #ffc107 !important;
+}
+
+.cell-bg-placedposition-destroyer {
+    background-color: #0d6efd !important;
+}
+
+.cell-bg-placedposition-submarine {
+    background-color: #0dcaf0 !important;
+}
+
+.cell-bg-placedposition-patrolboat {
+    background-color: #198754 !important;
+}

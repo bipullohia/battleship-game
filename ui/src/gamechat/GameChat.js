@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef } from 'react'
 import { Stomp } from '@stomp/stompjs'
-import SockJS from 'sockjs-client';
-import './GameChat.css';
+import SockJS from 'sockjs-client'
+import './GameChat.css'
 
 function GameChat() {
     const [username, setUsername] = useState('');
