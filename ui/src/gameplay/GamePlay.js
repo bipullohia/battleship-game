@@ -6,50 +6,57 @@ import './GamePlay.css'
 function GamePlay() {
 
     const [gridSetupMode, setGridSetupMode] = useState(true);
-    const [placedShipCount, setPlacedShipCount] = useState('0');
+    const [placedShipCount, setPlacedShipCount] = useState(0);
     const [shipDirection, setShipDirection] = useState('Horizontal'); //default direction
     const [selectedShip, setSelectedShip] = useState('');
     const [selectedCells, setSelectedCells] = useState([]);
     const [placedCells, setPlacedCells] = useState([]);
 
-    //ship placements on the grid
-    const [shipInfo, setShipInfo] = useState({
+    const defaultShipInfo = {
         carrier: {
             shipName: "Carrier",
-            bgcolor: 'cell-bg-placedposition-carrier',
+            bgcolorPlaced: 'cell-bg-placedposition-carrier',
+            bgColorHovered: 'cell-bg-validposition-carrier',
             shipPlaced: false,
             cellCount: 5,
             cells: [],
         },
         battleship: {
             shipName: "BattleShip",
-            bgcolor: 'cell-bg-placedposition-battleship',
+            bgcolorPlaced: 'cell-bg-placedposition-battleship',
+            bgColorHovered: 'cell-bg-validposition-battleship',
             shipPlaced: false,
             cellCount: 4,
             cells: []
         },
         destroyer: {
             shipName: "Destroyer",
-            bgcolor: 'cell-bg-placedposition-destroyer',
+            bgcolorPlaced: 'cell-bg-placedposition-destroyer',
+            bgColorHovered: 'cell-bg-validposition-destroyer',
             shipPlaced: false,
             cellCount: 3,
             cells: []
         },
         submarine: {
             shipName: "Submarine",
-            bgcolor: 'cell-bg-placedposition-submarine',
+            bgcolorPlaced: 'cell-bg-placedposition-submarine',
+            bgColorHovered: 'cell-bg-validposition-submarine',
             shipPlaced: false,
             cellCount: 3,
             cells: []
         },
         patrolboat: {
             shipName: "Patrol Boat",
-            bgcolor: 'cell-bg-placedposition-patrolboat',
+            bgcolorPlaced: 'cell-bg-placedposition-patrolboat',
+            bgColorHovered: 'cell-bg-validposition-patrolboat',
             shipPlaced: false,
             cellCount: 2,
             cells: []
-        },
-    });
+        }
+    }
+
+    //ship placements on the grid
+    const [shipInfo, setShipInfo] = useState({ ...defaultShipInfo });
 
     const gameRules = () => {
         return (
@@ -76,85 +83,119 @@ function GamePlay() {
         )
     }
 
-    const cellMouseEnterAction = (cellId) => {
-        const validCellIds = [];
-
-        //a ship has to be selected for the hover position to be displayed
-        if (selectedShip) {
+    const cellHoverAction = (cellId) => {
+        if (selectedShip && !placedCells.includes(cellId)) {
+            let validCells = [];
+            const { [selectedShip]: ship } = shipInfo;
+            const cellCount = ship.cellCount;   
             const x = cellId.charAt(0).charCodeAt(0) - 65;
             const y = cellId.charAt(1).charCodeAt(0) - 65;
-            console.log(`x:${x} y:${y}`);
-
-            const { [selectedShip]: ship } = shipInfo;
-            const cellCount = ship.cellCount;
-
-            console.log("cell count: " + cellCount);
-
-            if (shipDirection === 'Horizontal') {
-                //direction set as horizontal
-                //check left
-                if (y + cellCount <= Values.GRID_SIZE) {
-                    //add cellCount-1 cells to the right
-                    for (let i = 0; i < cellCount; i++) {
-                        validCellIds.push(String.fromCharCode(x + 65, y + i + 65));
-                    }
-
-                } else { //check right
-                    //add cellCount-1 cells to the left
-                    for (let i = 0; i < cellCount; i++) {
-                        validCellIds.push(String.fromCharCode(x + 65, y - i + 65));
-                    }
+            
+            if(shipDirection === 'Horizontal'){
+                validCells = getValidHorizontalCells(x, y, cellCount);
+                if(validCells.length < cellCount){
+                    validCells = [];
+                    validCells = getValidVerticalCells(x, y, cellCount);
                 }
-
-            } else {
-                //direction set as vertical
-                //check down
-                if (x + cellCount <= Values.GRID_SIZE) {
-                    //add cellCount-1 cells to the bottom
-                    for (let i = 0; i < cellCount; i++) {
-                        validCellIds.push(String.fromCharCode(x + i + 65, y + 65));
-                    }
-
-                } else { //check up
-                    //add cellCount-1 cells to the top
-                    for (let i = 0; i < cellCount; i++) {
-                        validCellIds.push(String.fromCharCode(x - i + 65, y + 65));
-                    }
+            }else{
+                validCells = getValidVerticalCells(x, y, cellCount);
+                if(validCells.length < cellCount){
+                    validCells = [];
+                    validCells = getValidHorizontalCells(x, y, cellCount);
                 }
-            }
+            }    
 
-            //TODO: Validate for already placed Cells
-
-            setSelectedCells(validCellIds);
+            if(validCells.length === cellCount) 
+                setSelectedCells(validCells);
         }
     }
 
-    const cellClickAction = () => {
-        //process the selected cells for the selected ship
-
-        if (!selectedShip) {
-            if (placedShipCount === Values.TOTAL_SHIP_COUNT) {
-                //all ships already selected
-                alert(`All ships selected, Start the Game!`)
-            } else {
-                //no ship selected, throw an error
-                alert(`No Ship selected. Select one from the list!`); //TODO: Convert this to a custom modal
+    const getValidHorizontalCells = (x, y, cellCount) => {
+        let validHCells = [];
+        let count = 0;
+        //check right side for empty cells (including self)
+        for(let i=0; i<cellCount && y+i<Values.GRID_SIZE; i++){
+            const cell = String.fromCharCode(x + 65, y+i + 65);
+            if(!placedCells.includes(cell)){
+                validHCells.push(cell);
+                count++;
+            }else{
+                //we can't continue in this direction
+                break;
             }
-        } else {
-            //update the placedCell Array
-            setPlacedCells([...placedCells, ...selectedCells]); //keep in mind to spread the selectedCells or it will get added as array of arrays
-            //increment placed ship count
-            setPlacedShipCount(prevPlacedShipCount => ++prevPlacedShipCount);
+        }
 
-            //update ship info with cell positions and shipPlaced as true
-            const newShipInfo = shipInfo;
-            newShipInfo[selectedShip].shipPlaced = true;
-            newShipInfo[selectedShip].cells = selectedCells;
-            setShipInfo(newShipInfo);
+        //check left side for empty cells (atleast 1 cell {self} has been added to the validHCells
+         for(let i=1; i<=cellCount-count && y-i>=0; i++){
+            const cell = String.fromCharCode(x + 65, y-i + 65);
+            if(!placedCells.includes(cell)){
+                validHCells.push(cell);
+            }else{
+                //we can't continue in this direction
+                break;
+            }
+        }
+        return validHCells;
+    }
 
-            //reset selected items
-            setSelectedCells([]);
-            setSelectedShip('');
+    const getValidVerticalCells = (x, y, cellCount) => {
+        let validVCells = [];
+        let count = 0;
+        //check bottom side for empty cells (including self)
+        for(let i=0; i<cellCount && x+i<Values.GRID_SIZE; i++){
+            const cell = String.fromCharCode(x+i + 65, y + 65);
+            if(!placedCells.includes(cell)){
+                validVCells.push(cell);
+                count++;
+            }else{
+                //we can't continue in this direction
+                break;
+            }
+        }
+
+        //check up side for empty cells (atleast 1 cell {self} has been added to the validVCells
+         for(let i=1; i<=cellCount-count && x-i>=0; i++){
+            const cell = String.fromCharCode(x-i + 65, y + 65);
+            if(!placedCells.includes(cell)){
+                validVCells.push(cell);
+            }else{
+                //we can't continue in this direction
+                break;
+            }
+        }
+        return validVCells;
+    }
+
+    const cellClickAction = (cellId) => {
+        //if the cell already has a ship, don't do anything (or show up a modal/warning???)
+        if (!placedCells.includes(cellId)) {
+            //process the selected cells for the selected ship
+            if (!selectedShip) {
+                if (placedShipCount === Values.TOTAL_SHIP_COUNT) {
+                    //all ships already selected
+                    alert(`All ships selected, Start the Game!`)
+                } else {
+                    //no ship selected, throw an error
+                    alert(`No Ship selected. Select one from the list!`); //TODO: Convert this to a custom modal
+                }
+            } else if(shipInfo[selectedShip].cellCount === selectedCells.length){ //this should only be clicked when we have a proper array of cells selected
+                //update the placedCell Array
+                setPlacedCells([...placedCells, ...selectedCells]); //keep in mind to spread the selectedCells or it will get added as array of arrays
+                //increment placed ship count
+                setPlacedShipCount(prevPlacedShipCount => ++prevPlacedShipCount);
+
+                //update ship info with cell positions and shipPlaced as true
+                const newShipInfo = shipInfo;
+                newShipInfo[selectedShip].shipPlaced = true;
+                newShipInfo[selectedShip].cells = selectedCells;
+                setShipInfo(newShipInfo);
+
+                //reset selected items
+                setSelectedCells([]);
+                setSelectedShip('');
+            } else{
+                alert('Ship cannot be placed via this cell, choose another cell!');
+            }
         }
     }
 
@@ -165,8 +206,8 @@ function GamePlay() {
             for (let j = 0; j < Values.GRID_SIZE; j++) {
                 const cellId = String.fromCharCode(65 + i, 65 + j);
                 row.push(
-                    <td key={cellId} cell-id={cellId} role="button" className={`cell p-4 fw-lighter ${selectGridCellBgColor(cellId)}`}
-                        onMouseOver={() => cellMouseEnterAction(cellId)} onClick={() => cellClickAction()} style={{ maxWidth: '10%', maxHeight: '10%' }}>{cellId}</td>
+                    <td key={cellId} cell-id={cellId} className={`cell p-4 fw-lighter ${selectGridCellBgColor(cellId)}`}
+                        onMouseOver={() => cellHoverAction(cellId)} onClick={() => cellClickAction(cellId)} style={{ maxWidth: '10%', maxHeight: '10%' }}>{cellId}</td>
                 );
             }
             grid.push(
@@ -177,12 +218,13 @@ function GamePlay() {
     }
 
     const renderShipPlacementStatusMsg = () => {
+        //depending on the ship placement/selected status - render a alert message
         if (placedShipCount === Values.TOTAL_SHIP_COUNT) {
-            return Msg.ALL_SHIPS_PLACED;
+            return (<div className="alert alert-success" role="alert">{Msg.ALL_SHIPS_PLACED}</div>)
         } else if (selectedShip) {
-            return `${shipInfo[selectedShip].shipName} selected. Place it on the Grid now!`;
+            return (<div className="alert alert-primary" role="alert">{shipInfo[selectedShip].shipName} selected. Place it on the Battlefield now!</div>);
         } else {
-            return Msg.NO_SHIP_SELECTED;
+            return (<div className="alert alert-danger" role="alert">{Msg.NO_SHIP_SELECTED}</div>);
         }
     }
 
@@ -195,20 +237,36 @@ function GamePlay() {
     }
 
     const selectGridCellBgColor = (cellId) => {
+        //not allowed to place a ship on a cell which already has a ship
         if (placedCells.includes(cellId)) {
-            //TODO: see if we can make this logic better/faster
-            if (shipInfo.carrier.cells.length > 0 && shipInfo.carrier.cells.includes(cellId)) return shipInfo.carrier.bgcolor;
-            if (shipInfo.battleship.cells.length > 0 && shipInfo.battleship.cells.includes(cellId)) return shipInfo.battleship.bgcolor;
-            if (shipInfo.destroyer.cells.length > 0 && shipInfo.destroyer.cells.includes(cellId)) return shipInfo.destroyer.bgcolor;
-            if (shipInfo.submarine.cells.length > 0 && shipInfo.submarine.cells.includes(cellId)) return shipInfo.submarine.bgcolor;
-            if (shipInfo.patrolboat.cells.length > 0 && shipInfo.patrolboat.cells.includes(cellId)) return shipInfo.patrolboat.bgcolor;
+            for (const shipKey in shipInfo) {
+                const ship = shipInfo[shipKey];
+                if (ship.cells.length > 0 && ship.cells.includes(cellId)) return ship.bgcolorPlaced + ' cursor-notallowed';
+            }
         }
+        //no ship selected - select a ship
         if (!selectedShip) {
-            return 'cell-bg-invalidposition';
+            return 'cell-bg-invalidposition cursor-notallowed';
         }
+        //cell is a part of selected cell - show proper ship color
         if (selectedCells.includes(cellId)) {
-            return 'cell-bg-validposition';
+            const ship = shipInfo[selectedShip];
+            return ship.bgColorHovered + ' cursor-pointer';
         }
+        //other - like the cell position isn't sufficient for the selected ship
+        return 'cell-bg-invalidposition cursor-notallowed';
+    }
+
+    const resetGrid = () => {
+        //set state variables to default
+        setPlacedShipCount(0);
+        setShipDirection('Horizontal');
+        setSelectedShip('');
+        setSelectedCells([]);
+        setPlacedCells([]);
+
+        //restore ship status
+        setShipInfo({ ...defaultShipInfo });
     }
 
     return (
@@ -284,11 +342,10 @@ function GamePlay() {
                             </div>
                         </div>
                         <div className="col-6">
-                            <p className={placedShipCount < Values.TOTAL_SHIP_COUNT ? 'fs-6 mt-2 fw-bold text-danger' : 'fs-4 mt-5 fw-bold text-success'}>
-                                {renderShipPlacementStatusMsg()}</p>
+                            {renderShipPlacementStatusMsg()}
                             <p className={placedShipCount < Values.TOTAL_SHIP_COUNT ? 'fs-5 fw-bold text-danger' : 'd-none'}>{placedShipCount}/{Values.TOTAL_SHIP_COUNT} ship(s) placed on the Battlefield</p>
                             <div className={placedShipCount < Values.TOTAL_SHIP_COUNT ? 'row mt-4 justify-content-center' : 'd-none'}>
-                                <h6 className="fw-bold mb-2 col-3 d-flex">Ship direction: </h6>
+                                <h6 className="fw-bold mb-2 col-5 d-flex">Ship direction (1st preference): </h6>
                                 <div className="form-check d-flex col-3">
                                     <input className="form-check-input" type="radio" name="flexRadioShipDirection" id="flexRadioShipDirectionHorizontal"
                                         checked={shipDirection === "Horizontal" ? true : false} onChange={() => setShipDirection('Horizontal')}></input>
@@ -302,7 +359,7 @@ function GamePlay() {
                             </div>
 
                             <div className="col-12">
-                                <button type="button" className="col-4 btn btn-warning fw-bold my-4 btn-lg me-2" onClick={(e) => alert('Are you sure you want to restart the grid setup?')}>Reset the Grid</button>
+                                <button type="button" className="col-4 btn btn-warning fw-bold my-4 btn-lg me-2" onClick={() => resetGrid()}>Reset the Grid</button>
                                 <button type="button" className='col-7 btn btn-success fw-bold my-4 btn-lg' disabled={!placedShipCount === Values.TOTAL_SHIP_COUNT} onClick={(e) => alert('Grid setup done!')}>Start the Game</button>
                             </div>
                         </div>
@@ -317,8 +374,7 @@ function GamePlay() {
 export default GamePlay;
 
 //TODOs...
-//disable to placed cell to not be able to clicked, same for when a ship isn't selected - remove pointers too?
-//proper already placed cell validation for the new ships to be placed
-//Implement 'Reset the Game'
 //Implement 'Start the Game'
 //The placement badges are coming in the middle, get it on the left
+//right click to change ship direction
+//disabled start the game button doesn't work

@@ -1,6 +1,6 @@
 export const DefaultMessages = Object.freeze({
-    NO_SHIP_SELECTED: 'No Ship selected. Select one before trying to place on the Grid!',
-    ALL_SHIPS_PLACED: 'All Ships placed. Start the game!'
+    NO_SHIP_SELECTED: 'Select a Warship before trying to place anything on the Battlefield!',
+    ALL_SHIPS_PLACED: 'All Warships placed. Start the game!'
 });
 
 export const Props = Object.freeze({

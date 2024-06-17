@@ -1,11 +1,29 @@
 .cell-bg-invalidposition:hover {
     background-color: salmon;
-} 
-
-.cell-bg-validposition {
-    background-color: greenyellow !important;
 }
 
+/* Backgroud Colors for different ships while they are selected (hovered) */
+.cell-bg-validposition-carrier {
+    background-color:  #ed929b !important;
+} 
+
+.cell-bg-validposition-battleship {
+    background-color: #f8de93 !important;
+}
+
+.cell-bg-validposition-destroyer {
+    background-color: #80b1fb !important;
+}
+
+.cell-bg-validposition-submarine {
+    background-color: #a4dfeb !important;
+}
+
+.cell-bg-validposition-patrolboat {
+    background-color: #9edcbf !important;
+}
+
+/* Backgroud Colors for different ships once they are placed */
 .cell-bg-placedposition-carrier {
     background-color:  #dc3545 !important;
 } 
@@ -24,4 +42,16 @@
 
 .cell-bg-placedposition-patrolboat {
     background-color: #198754 !important;
+}
+
+.cursor-notallowed {
+    cursor: not-allowed;
+}
+
+.cursor-notallowed {
+    cursor: not-allowed;
+}
+
+.cursor-pointer {
+    cursor: pointer;
 }

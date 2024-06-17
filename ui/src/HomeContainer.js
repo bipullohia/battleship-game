@@ -39,6 +39,5 @@ function Body(){
 /*Advanced features to think of:
     1. dark mode support
     2. cert on ws connection
-
     */
 export default HomeContainer;
