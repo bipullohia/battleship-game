@@ -39,5 +39,6 @@ function Body(){
 /*Advanced features to think of:
     1. dark mode support
     2. cert on ws connection
+    3. gameplay settings - to hide the cellId and placement cells (green badges)
     */
 export default HomeContainer;

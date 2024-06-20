@@ -7,9 +7,9 @@ import org.springframework.stereotype.Controller;
 import com.bipullohia.battleship.model.ChatMessage;
 
 @Controller
-public class ChatController {
+public class GameChatController {
 
-    @MessageMapping("/battleship/chat") //handles messages sent by users.
+    @MessageMapping("/game/battleship/chat") //handles messages sent by users
     @SendTo("/topic/public")
     public ChatMessage sendMessage(ChatMessage message){
         System.out.println(message);

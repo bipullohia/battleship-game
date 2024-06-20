@@ -71,14 +71,6 @@ function GamePlay() {
                     <li>In the meantime, your opponent will also be setting up their own grid</li>
                     <li>Once the game starts, the first to sink all the ships of the opponent wins!</li>
                 </ol>
-
-                {/* <div className="mt-5">
-                    <h5>Ignore these...</h5>
-                    <p>Ship direction: {shipDirection}</p>
-                    <p>Selected Ship: {selectedShip}</p>
-                    <p>{selectedCells}</p>
-                    <p>{placedCells}</p>
-                </div> */}
             </div>
         )
     }
@@ -87,25 +79,25 @@ function GamePlay() {
         if (selectedShip && !placedCells.includes(cellId)) {
             let validCells = [];
             const { [selectedShip]: ship } = shipInfo;
-            const cellCount = ship.cellCount;   
+            const cellCount = ship.cellCount;
             const x = cellId.charAt(0).charCodeAt(0) - 65;
             const y = cellId.charAt(1).charCodeAt(0) - 65;
-            
-            if(shipDirection === 'Horizontal'){
+
+            if (shipDirection === 'Horizontal') {
                 validCells = getValidHorizontalCells(x, y, cellCount);
-                if(validCells.length < cellCount){
+                if (validCells.length < cellCount) {
                     validCells = [];
                     validCells = getValidVerticalCells(x, y, cellCount);
                 }
-            }else{
+            } else {
                 validCells = getValidVerticalCells(x, y, cellCount);
-                if(validCells.length < cellCount){
+                if (validCells.length < cellCount) {
                     validCells = [];
                     validCells = getValidHorizontalCells(x, y, cellCount);
                 }
-            }    
+            }
 
-            if(validCells.length === cellCount) 
+            if (validCells.length === cellCount)
                 setSelectedCells(validCells);
         }
     }
@@ -114,23 +106,23 @@ function GamePlay() {
         let validHCells = [];
         let count = 0;
         //check right side for empty cells (including self)
-        for(let i=0; i<cellCount && y+i<Values.GRID_SIZE; i++){
-            const cell = String.fromCharCode(x + 65, y+i + 65);
-            if(!placedCells.includes(cell)){
+        for (let i = 0; i < cellCount && y + i < Values.GRID_SIZE; i++) {
+            const cell = String.fromCharCode(x + 65, y + i + 65);
+            if (!placedCells.includes(cell)) {
                 validHCells.push(cell);
                 count++;
-            }else{
+            } else {
                 //we can't continue in this direction
                 break;
             }
         }
 
         //check left side for empty cells (atleast 1 cell {self} has been added to the validHCells
-         for(let i=1; i<=cellCount-count && y-i>=0; i++){
-            const cell = String.fromCharCode(x + 65, y-i + 65);
-            if(!placedCells.includes(cell)){
+        for (let i = 1; i <= cellCount - count && y - i >= 0; i++) {
+            const cell = String.fromCharCode(x + 65, y - i + 65);
+            if (!placedCells.includes(cell)) {
                 validHCells.push(cell);
-            }else{
+            } else {
                 //we can't continue in this direction
                 break;
             }
@@ -142,23 +134,23 @@ function GamePlay() {
         let validVCells = [];
         let count = 0;
         //check bottom side for empty cells (including self)
-        for(let i=0; i<cellCount && x+i<Values.GRID_SIZE; i++){
-            const cell = String.fromCharCode(x+i + 65, y + 65);
-            if(!placedCells.includes(cell)){
+        for (let i = 0; i < cellCount && x + i < Values.GRID_SIZE; i++) {
+            const cell = String.fromCharCode(x + i + 65, y + 65);
+            if (!placedCells.includes(cell)) {
                 validVCells.push(cell);
                 count++;
-            }else{
+            } else {
                 //we can't continue in this direction
                 break;
             }
         }
 
         //check up side for empty cells (atleast 1 cell {self} has been added to the validVCells
-         for(let i=1; i<=cellCount-count && x-i>=0; i++){
-            const cell = String.fromCharCode(x-i + 65, y + 65);
-            if(!placedCells.includes(cell)){
+        for (let i = 1; i <= cellCount - count && x - i >= 0; i++) {
+            const cell = String.fromCharCode(x - i + 65, y + 65);
+            if (!placedCells.includes(cell)) {
                 validVCells.push(cell);
-            }else{
+            } else {
                 //we can't continue in this direction
                 break;
             }
@@ -178,7 +170,7 @@ function GamePlay() {
                     //no ship selected, throw an error
                     alert(`No Ship selected. Select one from the list!`); //TODO: Convert this to a custom modal
                 }
-            } else if(shipInfo[selectedShip].cellCount === selectedCells.length){ //this should only be clicked when we have a proper array of cells selected
+            } else if (shipInfo[selectedShip].cellCount === selectedCells.length) { //this should only be clicked when we have a proper array of cells selected
                 //update the placedCell Array
                 setPlacedCells([...placedCells, ...selectedCells]); //keep in mind to spread the selectedCells or it will get added as array of arrays
                 //increment placed ship count
@@ -193,7 +185,7 @@ function GamePlay() {
                 //reset selected items
                 setSelectedCells([]);
                 setSelectedShip('');
-            } else{
+            } else {
                 alert('Ship cannot be placed via this cell, choose another cell!');
             }
         }
@@ -329,7 +321,7 @@ function GamePlay() {
                                     {shipInfo.submarine.shipName}<span className="badge rounded-pill bg-info text-dark ms-2">{shipInfo.submarine.cellCount} cells</span> </button>
                                 <div className="form-group col-4">
                                     <span className={selectedShip === 'submarine' ? "badge bg-warning text-dark mt-2" : "d-none"}>Currently Selected</span>
-                                    <span className={shipInfo.submarine.shipPlaced ? "badge bg-success mt-2" : "d-none"}>{`Placed: ${shipInfo.submarine.cells}`}</span>
+                                    <span className={shipInfo.submarine.shipPlaced ? "badge bg-success mt-2 position-relative start-0" : "d-none"}>{`Placed: ${shipInfo.submarine.cells}`}</span>
                                 </div>
                             </div>
                             <div className="row mb-2 justify-content-center">
@@ -337,7 +329,7 @@ function GamePlay() {
                                     {shipInfo.patrolboat.shipName}<span className="badge rounded-pill bg-success ms-2">{shipInfo.patrolboat.cellCount} cells</span> </button>
                                 <div className="form-group col-4">
                                     <span className={selectedShip === 'patrolboat' ? "badge bg-warning text-dark mt-2" : "d-none"}>Currently Selected</span>
-                                    <span className={shipInfo.patrolboat.shipPlaced ? "badge bg-success mt-2" : "d-none"}>{`Placed: ${shipInfo.patrolboat.cells}`}</span>
+                                    <span className={shipInfo.patrolboat.shipPlaced ? "badge bg-success mt-2 position-relative start-0" : "d-none"}>{`Placed: ${shipInfo.patrolboat.cells}`}</span>
                                 </div>
                             </div>
                         </div>
@@ -345,7 +337,7 @@ function GamePlay() {
                             {renderShipPlacementStatusMsg()}
                             <p className={placedShipCount < Values.TOTAL_SHIP_COUNT ? 'fs-5 fw-bold text-danger' : 'd-none'}>{placedShipCount}/{Values.TOTAL_SHIP_COUNT} ship(s) placed on the Battlefield</p>
                             <div className={placedShipCount < Values.TOTAL_SHIP_COUNT ? 'row mt-4 justify-content-center' : 'd-none'}>
-                                <h6 className="fw-bold mb-2 col-5 d-flex">Ship direction (1st preference): </h6>
+                                <h6 className="fw-bold mb-2 col-5 d-flex">Ship direction preference: </h6>
                                 <div className="form-check d-flex col-3">
                                     <input className="form-check-input" type="radio" name="flexRadioShipDirection" id="flexRadioShipDirectionHorizontal"
                                         checked={shipDirection === "Horizontal" ? true : false} onChange={() => setShipDirection('Horizontal')}></input>
@@ -378,3 +370,6 @@ export default GamePlay;
 //The placement badges are coming in the middle, get it on the left
 //right click to change ship direction
 //disabled start the game button doesn't work
+//Setup the Grid button doesn't work
+//Implement Toasts/Modals for the alerts/error messages
+//'Setup the below Warships on the Battlefield' should come on the left
