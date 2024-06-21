@@ -5,7 +5,7 @@ import './GamePlay.css'
 
 function GamePlay() {
 
-    const [gridSetupMode, setGridSetupMode] = useState(true);
+    const [gridSetupMode, setGridSetupMode] = useState(false);
     const [placedShipCount, setPlacedShipCount] = useState(0);
     const [shipDirection, setShipDirection] = useState('Horizontal'); //default direction
     const [selectedShip, setSelectedShip] = useState('');
@@ -58,9 +58,12 @@ function GamePlay() {
     //ship placements on the grid
     const [shipInfo, setShipInfo] = useState({ ...defaultShipInfo });
 
+    //opposition's ship placement
+    const [shipInfoOpp, setShipInfoOpp] = useState();
+
     const gameRules = () => {
         return (
-            <div className="mx-auto  ms-5">
+            <div className="ms-5">
                 <h6 className="mt-5 fw-bold">Game Rules...</h6>
                 <ol className="text-start">
                     <li>We are playing a classic game of 'BattleShip'</li>
@@ -71,6 +74,8 @@ function GamePlay() {
                     <li>In the meantime, your opponent will also be setting up their own grid</li>
                     <li>Once the game starts, the first to sink all the ships of the opponent wins!</li>
                 </ol>
+                <button type="button" className={gridSetupMode ? 'd-none': 'btn btn-success mt-5 btn-lg'} onClick={() => setGridSetupMode(true)}>Set your Grid</button>
+                <button type="button" className={gridSetupMode ? 'btn btn-danger mt-5 btn-lg': 'd-none'} onClick={() => restartGame()}>Start from Beginning</button>
             </div>
         )
     }
@@ -209,6 +214,24 @@ function GamePlay() {
         return grid;
     }
 
+    const renderOppositionGrid = () => {
+        const grid = [];
+        for (let i = 0; i < Values.GRID_SIZE; i++) {
+            const row = [];
+            for (let j = 0; j < Values.GRID_SIZE; j++) {
+                const cellId = String.fromCharCode(65 + i, 65 + j);
+                row.push(
+                    <td key={cellId} cell-id={cellId} className={`cell p-4 fw-lighter ${selectOppositionGridBgColor(cellId)}`}
+                        style={{ maxWidth: '10%', maxHeight: '10%' }}>{cellId}</td>
+                );
+            }
+            grid.push(
+                <tr className="" key={i}>{row}</tr>
+            );
+        }
+        return grid;
+    }
+
     const renderShipPlacementStatusMsg = () => {
         //depending on the ship placement/selected status - render a alert message
         if (placedShipCount === Values.TOTAL_SHIP_COUNT) {
@@ -220,8 +243,10 @@ function GamePlay() {
         }
     }
 
-    const setGridForPlayer = () => {
-        setGridSetupMode(true);
+    const restartGame = () => {
+        setGridSetupMode(false);
+        resetGrid();
+        setShipInfoOpp();
     }
 
     const selectAShip = (ship) => {
@@ -249,6 +274,13 @@ function GamePlay() {
         return 'cell-bg-invalidposition cursor-notallowed';
     }
 
+    const selectOppositionGridBgColor = (cellId) => {
+        for (const shipKey in shipInfoOpp) {
+            const ship = shipInfoOpp[shipKey];
+            if (ship.cells.length > 0 && ship.cells.includes(cellId)) return defaultShipInfo[shipKey].bgcolorPlaced;
+        }
+    }
+
     const resetGrid = () => {
         //set state variables to default
         setPlacedShipCount(0);
@@ -259,6 +291,59 @@ function GamePlay() {
 
         //restore ship status
         setShipInfo({ ...defaultShipInfo });
+    }
+
+    const startGame = async(e) => {
+        //make a fetch api call to the server to send ship placement details and start a game session with computer
+        e.preventDefault();
+
+        //form the json object we want to send
+        const newgame = {
+            "gameType": "computer",
+            "shipCollectionPlayer1": {
+                "carrier": {
+                    "cells": shipInfo.carrier.cells
+                },
+                "battleship": {
+                    "cells": shipInfo.battleship.cells
+                },
+                "destroyer": {
+                    "cells": shipInfo.destroyer.cells
+                },
+                "submarine": {
+                    "cells": shipInfo.submarine.cells
+                },
+                "patrolboat": {
+                    "cells": shipInfo.patrolboat.cells
+                }
+            }
+        }
+
+        console.log(newgame);
+        
+        try{
+            const response = await fetch('http://localhost:8080/game/battleship/play/startgame', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newgame)
+            });
+
+            if(!response.ok){
+                throw new Error(`Error!  + ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log(`Http resp: ' + ${JSON.stringify(result)}`);
+            if(result.shipCollectionPlayer2){
+                setShipInfoOpp(result.shipCollectionPlayer2);
+            }
+
+        } catch (error){
+            console.error(`Error caught: ${error}`);
+        }
+
     }
 
     return (
@@ -352,13 +437,30 @@ function GamePlay() {
 
                             <div className="col-12">
                                 <button type="button" className="col-4 btn btn-warning fw-bold my-4 btn-lg me-2" onClick={() => resetGrid()}>Reset the Grid</button>
-                                <button type="button" className='col-7 btn btn-success fw-bold my-4 btn-lg' disabled={!placedShipCount === Values.TOTAL_SHIP_COUNT} onClick={(e) => alert('Grid setup done!')}>Start the Game</button>
+                                <button type="button" className='col-7 btn btn-success fw-bold my-4 btn-lg' disabled={placedShipCount !== Values.TOTAL_SHIP_COUNT} onClick={(e) => startGame(e)}>Start the Game</button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <button type="button" className={gridSetupMode ? 'd-none' : 'btn btn-success mt-2 btn-lg'} onClick={setGridForPlayer}>Set your Grid</button>
             </div>
+
+            <div className={shipInfoOpp ? 'col-4': 'd-none'}>
+                    {/* This (Actual Grid UI and gameplay) can be another child component altogether - implement after learning React-Redux */}
+                    {/* <Grid rows={Values.GRID_SIZE} cols={Values.GRID_SIZE} data={}/> */}
+                    <h6>Opposition's Grid...</h6>
+                    <div className="container-fluid">
+                        <div className="row">
+                            <div className="col-6 mx-auto">
+                                <table className="table table-bordered table-info">
+                                    <tbody>
+                                        {renderOppositionGrid()}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
         </div>
     )
 }
@@ -368,8 +470,8 @@ export default GamePlay;
 //TODOs...
 //Implement 'Start the Game'
 //The placement badges are coming in the middle, get it on the left
-//right click to change ship direction
-//disabled start the game button doesn't work
-//Setup the Grid button doesn't work
+//right click to change ship direction - show cursor as vertical bidirectional arrow or horizontal bidrectional arrow
 //Implement Toasts/Modals for the alerts/error messages
 //'Setup the below Warships on the Battlefield' should come on the left
+//Start the Game should have a tooltip on cursor hover - 'Place the remaining x ships to start the game'
+//Tooltips for all the buttons/ ships, etc.

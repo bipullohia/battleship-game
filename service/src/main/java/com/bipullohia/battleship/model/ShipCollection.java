@@ -54,11 +54,11 @@ public class ShipCollection {
 		
 	@JsonIgnore
 	public List<ShipInfo> getAllShips(){
-		carrier.setShip(ShipType.carrier);
-		battleship.setShip(ShipType.battleship);
-		destroyer.setShip(ShipType.destroyer);
-		submarine.setShip(ShipType.submarine);
-		patrolboat.setShip(ShipType.patrolboat);
+		if(carrier.getShip()==null) carrier.setShip(ShipType.carrier);
+		if(battleship.getShip()==null)battleship.setShip(ShipType.battleship);
+		if(destroyer.getShip()==null)destroyer.setShip(ShipType.destroyer);
+		if(submarine.getShip()==null)submarine.setShip(ShipType.submarine);
+		if(patrolboat.getShip()==null)patrolboat.setShip(ShipType.patrolboat);
 		return Arrays.asList(carrier, battleship, destroyer, submarine, patrolboat);
 	}
 	
