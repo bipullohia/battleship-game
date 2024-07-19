@@ -6,4 +6,5 @@ public final class Constants {
 	private Constants() {}
 	
 	public static final int GRID_SIZE = 8;
+	public static final String REDIS_GAMEINFO_PREFIX = "game:";
 }

@@ -22,20 +22,22 @@ function GameChat() {
     }
 
     const createWebsocketConnection = () => {
-        const socket = new SockJS('http://localhost:8080/chat');
+        const socket = new SockJS('http://localhost:8080/game/battleship/ws');
         const newClient = Stomp.over(socket);
 
-        newClient.debug = (msg) => console.log("createWebsocketConnection: " + msg);
-
+        //depending on public or private chat - this can differ - we can send to different topics
         newClient.connect({}, () => {
             console.log("Connected to websocket...");
-            newClient.subscribe('/topic/public', (message) => {
+
+            //subscribes to a topic to listen to the incoming messages
+            newClient.subscribe('/chat/public', (message) => {
                 //working with the message received
                 const receivedMsg = JSON.parse(message.body);
                 setMessages((prevMsgs) => [...prevMsgs, receivedMsg]);
             });
 
-            newClient.send("/app/battleship/chat", {}, JSON.stringify({
+            //sending a new message to /hello
+            newClient.send("/action/msg", {}, JSON.stringify({
                 'sender': username,
                 'type': 'JOIN'
             }));
@@ -48,6 +50,9 @@ function GameChat() {
         setClient(newClient);
     }
 
+    //when a new user connects to the es server with the username - we need to tell it all the others who have already connected to the chat server.
+
+
     const leaveChatRoom = () => {
         setJoinedChat(false);
         setRejoinedChat(true);
@@ -57,7 +62,7 @@ function GameChat() {
     const removeWebSocketConnection = () => {
         if (client) {
             //sending a msg before leaving the chat
-            client.send("/app/battleship/chat", {}, JSON.stringify({
+            client.send("/action/msg", {}, JSON.stringify({
                 'sender': username,
                 'type': 'LEAVE'
             }));
@@ -74,9 +79,9 @@ function GameChat() {
 
     const sendChatMessage = () => {
         if (client) {
-            client.send("/app/battleship/chat", {}, JSON.stringify({
+            client.send("/action/msg", {}, JSON.stringify({
                 'sender': username,
-                'type': 'CHAT',
+                'type': 'MSG',
                 'content': chatMessage
             }));
             setChatMessage('');
@@ -97,10 +102,7 @@ function GameChat() {
         }
     }
     
-    //TODOs
-    //make the topic name and url name better and more aligned
-    //make chatscreen 1/3 on the right vertically and scrollable
-
+    
     return (
         <div>
             <h5 className="fw-bolder mt-3">Game Chatroom!</h5>
@@ -121,7 +123,7 @@ function GameChat() {
                 <div className={messages.length === 0 ? 'd-none' : 'card mb-2 p-2 h-100'}>
                     <div className="card-body px-4 overflow-auto">
                         {messages.map((receivedMsg, index) => {
-                            if (receivedMsg.type === 'CHAT') {
+                            if (receivedMsg.type === 'MSG') {
                                 //if the user is sending the msg, that should display to the right. If the message is from someone else it's rendered on the left
                                 if (receivedMsg.sender === username) {
                                     return <p className="fst-normal chat-text text-end mb-1" key={index}>

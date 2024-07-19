@@ -1,7 +1,7 @@
 package com.bipullohia.battleship.model;
 
 public enum MessageType {
-    CHAT,
+    MSG,
     JOIN,
     LEAVE
 }

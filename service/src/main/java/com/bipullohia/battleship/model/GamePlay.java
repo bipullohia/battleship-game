@@ -3,10 +3,10 @@ package com.bipullohia.battleship.model;
 public class GamePlay {
 
 	private String gameId; //unique game sessionId/ game identifier
-	private String gameType; //player or computer
+	private String opponentType; //player or computer
 	private ShipCollection shipCollectionPlayer1; //shipCollection of Player 1
-	private ShipCollection shipCollectionPlayer2; //shipCollection of Player 2  
-	private String gameStatus; //to have the current status of the game - new, proc, done
+	private ShipCollection shipCollectionPlayer2; //shipCollection of Player 2 
+	private GameStatus gameStatus; //to have the current status of the game
 	private String winner;
 	
 	public String getGameId() {
@@ -15,11 +15,11 @@ public class GamePlay {
 	public void setGameId(String gameId) {
 		this.gameId = gameId;
 	}
-	public String getGameType() {
-		return gameType;
+	public String getOpponentType() {
+		return opponentType;
 	}
-	public void setGameType(String gameType) {
-		this.gameType = gameType;
+	public void setOpponentType(String opponentType) {
+		this.opponentType = opponentType;
 	}
 	public ShipCollection getShipCollectionPlayer1() {
 		return shipCollectionPlayer1;
@@ -33,10 +33,10 @@ public class GamePlay {
 	public void setShipCollectionPlayer2(ShipCollection shipCollectionPlayer2) {
 		this.shipCollectionPlayer2 = shipCollectionPlayer2;
 	}
-	public String getGameStatus() {
+	public GameStatus getGameStatus() {
 		return gameStatus;
 	}
-	public void setGameStatus(String gameStatus) {
+	public void setGameStatus(GameStatus gameStatus) {
 		this.gameStatus = gameStatus;
 	}
 	public String getWinner() {
@@ -48,7 +48,7 @@ public class GamePlay {
 	
 	@Override
 	public String toString() {
-		return "GamePlay [gameId=" + gameId + ", gameType=" + gameType + ", shipCollectionPlayer1="
+		return "GamePlay [gameId=" + gameId + ", opponentType=" + opponentType + ", shipCollectionPlayer1="
 				+ shipCollectionPlayer1 + ", shipCollectionPlayer2=" + shipCollectionPlayer2 + ", gameStatus="
 				+ gameStatus + ", winner=" + winner + "]";
 	}

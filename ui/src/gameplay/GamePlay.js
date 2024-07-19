@@ -1,16 +1,28 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { DefaultMessages as Msg } from "../constants";
 import { Props as Values } from "../constants"
 import './GamePlay.css'
+import { Stomp } from '@stomp/stompjs'
+import SockJS from "sockjs-client";
 
 function GamePlay() {
 
+    //to store various state objects for grid setup
     const [gridSetupMode, setGridSetupMode] = useState(false);
     const [placedShipCount, setPlacedShipCount] = useState(0);
     const [shipDirection, setShipDirection] = useState('Horizontal'); //default direction
     const [selectedShip, setSelectedShip] = useState('');
     const [selectedCells, setSelectedCells] = useState([]);
     const [placedCells, setPlacedCells] = useState([]);
+
+    //to store various game related info while it's running
+    const [gameId, setGameId] = useState('');
+    const [playerCells, setPlayerCells] = useState('');
+    const [opponentCells, setOpponentCells] = useState('');
+    
+    //websocket connection details
+    const [isWSConnected, setIsWSConnected] = useState(false);
+    const stompClientRef = useRef(null); //for ws connection
 
     const defaultShipInfo = {
         carrier: {
@@ -58,8 +70,46 @@ function GamePlay() {
     //ship placements on the grid
     const [shipInfo, setShipInfo] = useState({ ...defaultShipInfo });
 
-    //opposition's ship placement
-    const [shipInfoOpp, setShipInfoOpp] = useState();
+    //opposition's ship placement ***TEMPORARY***
+    // const [shipInfoOpp, setShipInfoOpp] = useState();
+
+    useEffect(() => {
+        //cleanup func to close ws connection when component unmounts
+        return () => {
+            if(stompClientRef.current){
+                stompClientRef.current.deactivate();
+            }
+        };
+    }, []);
+
+    const initiateWSConnection = () => {
+        const socket = new SockJS('http://localhost:8080/game/battleship/ws');
+        const stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, (frame) => {
+            console.log("Connected to game websocket: " + frame);
+            setIsWSConnected(true);
+            
+            stompClient.subscribe('/play/public', (msg) => {
+                console.log("Message from ws game server: " + msg.body);
+            });
+        }, (error) => {
+            console.log("Error while connection to game websocket: ", error);
+            setIsWSConnected(false);
+        });
+
+        stompClientRef.current = stompClient;
+    }
+
+    const sendGameMove = (cellId) => {
+        if(stompClientRef.current && stompClientRef.current.connected){
+            stompClientRef.current.send('/action/move', {}, JSON.stringify({
+                'gameId': gameId,
+                'player': 'player',
+                'cellId': cellId
+            }));
+        }
+    };
 
     const gameRules = () => {
         return (
@@ -74,8 +124,8 @@ function GamePlay() {
                     <li>In the meantime, your opponent will also be setting up their own grid</li>
                     <li>Once the game starts, the first to sink all the ships of the opponent wins!</li>
                 </ol>
-                <button type="button" className={gridSetupMode ? 'd-none': 'btn btn-success mt-5 btn-lg'} onClick={() => setGridSetupMode(true)}>Set your Grid</button>
-                <button type="button" className={gridSetupMode ? 'btn btn-danger mt-5 btn-lg': 'd-none'} onClick={() => restartGame()}>Start from Beginning</button>
+                <button type="button" className={gridSetupMode ? 'd-none' : 'btn btn-success mt-5 btn-lg'} onClick={() => setGridSetupMode(true)}>Set your Grid</button>
+                <button type="button" className={gridSetupMode ? 'btn btn-danger mt-5 btn-lg' : 'd-none'} onClick={() => restartGame()}>Start from Beginning</button>
             </div>
         )
     }
@@ -191,7 +241,7 @@ function GamePlay() {
                 setSelectedCells([]);
                 setSelectedShip('');
             } else {
-                alert('Ship cannot be placed via this cell, choose another cell!');
+                alert('Ship cannot be placed on this cell, choose another cell!');
             }
         }
     }
@@ -214,14 +264,14 @@ function GamePlay() {
         return grid;
     }
 
-    const renderOppositionGrid = () => {
+    const renderGameplayGrid = () => {
         const grid = [];
         for (let i = 0; i < Values.GRID_SIZE; i++) {
             const row = [];
             for (let j = 0; j < Values.GRID_SIZE; j++) {
                 const cellId = String.fromCharCode(65 + i, 65 + j);
                 row.push(
-                    <td key={cellId} cell-id={cellId} className={`cell p-4 fw-lighter ${selectOppositionGridBgColor(cellId)}`}
+                    <td key={cellId} cell-id={cellId} onClick={() => sendGameMove(cellId)} className={`cell p-4 fw-lighter`}
                         style={{ maxWidth: '10%', maxHeight: '10%' }}>{cellId}</td>
                 );
             }
@@ -246,7 +296,7 @@ function GamePlay() {
     const restartGame = () => {
         setGridSetupMode(false);
         resetGrid();
-        setShipInfoOpp();
+        // setShipInfoOpp();
     }
 
     const selectAShip = (ship) => {
@@ -274,12 +324,13 @@ function GamePlay() {
         return 'cell-bg-invalidposition cursor-notallowed';
     }
 
-    const selectOppositionGridBgColor = (cellId) => {
-        for (const shipKey in shipInfoOpp) {
-            const ship = shipInfoOpp[shipKey];
-            if (ship.cells.length > 0 && ship.cells.includes(cellId)) return defaultShipInfo[shipKey].bgcolorPlaced;
-        }
-    }
+    //***TEMPORARY***
+    // const selectOppositionGridBgColor = (cellId) => {
+    //     for (const shipKey in shipInfoOpp) {
+    //         const ship = shipInfoOpp[shipKey];
+    //         if (ship.cells.length > 0 && ship.cells.includes(cellId)) return defaultShipInfo[shipKey].bgcolorPlaced;
+    //     }
+    // }
 
     const resetGrid = () => {
         //set state variables to default
@@ -293,13 +344,13 @@ function GamePlay() {
         setShipInfo({ ...defaultShipInfo });
     }
 
-    const startGame = async(e) => {
+    const startGame = async (e) => {
         //make a fetch api call to the server to send ship placement details and start a game session with computer
         e.preventDefault();
 
         //form the json object we want to send
         const newgame = {
-            "gameType": "computer",
+            "opponentType": "computer",
             "shipCollectionPlayer1": {
                 "carrier": {
                     "cells": shipInfo.carrier.cells
@@ -319,10 +370,8 @@ function GamePlay() {
             }
         }
 
-        console.log(newgame);
-        
-        try{
-            const response = await fetch('http://localhost:8080/game/battleship/play/startgame', {
+        try {
+            const response = await fetch('http://localhost:8080/game/battleship/http/startgame', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -330,17 +379,26 @@ function GamePlay() {
                 body: JSON.stringify(newgame)
             });
 
-            if(!response.ok){
+            if (!response.ok) {
                 throw new Error(`Error!  + ${response.status}`);
             }
 
             const result = await response.json();
             console.log(`Http resp: ' + ${JSON.stringify(result)}`);
-            if(result.shipCollectionPlayer2){
-                setShipInfoOpp(result.shipCollectionPlayer2);
+
+            if (result && result.gameId) {
+                setGameId(result.gameId);
+
+                //we have the gameId, we are ready to start game. Establish a ws connection
+                initiateWSConnection();
             }
 
-        } catch (error){
+            // //***TEMPORARY*** only for debug purposes
+            // if(result.shipCollectionPlayer2){
+            //     setShipInfoOpp(result.shipCollectionPlayer2);
+            // }
+
+        } catch (error) {
             console.error(`Error caught: ${error}`);
         }
 
@@ -444,23 +502,38 @@ function GamePlay() {
                 </div>
             </div>
 
-            <div className={shipInfoOpp ? 'col-4': 'd-none'}>
-                    {/* This (Actual Grid UI and gameplay) can be another child component altogether - implement after learning React-Redux */}
-                    {/* <Grid rows={Values.GRID_SIZE} cols={Values.GRID_SIZE} data={}/> */}
-                    <h6>Opposition's Grid...</h6>
-                    <div className="container-fluid">
-                        <div className="row">
-                            <div className="col-6 mx-auto">
-                                <table className="table table-bordered table-info">
-                                    <tbody>
-                                        {renderOppositionGrid()}
-                                    </tbody>
-                                </table>
-                            </div>
+            {/* ***TEMPORARY***
+            <div className={shipInfoOpp ? 'col-4 mt-5' : 'd-none'}>
+                <h6>Opposition's Grid...</h6>
+                <div className="container-fluid">
+                    <div className="row">
+                        <div className="col-6 mx-auto">
+                            <table className="table table-bordered table-info">
+                                <tbody>
+                                    {renderOppositionGrid()}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-
                 </div>
+            </div> 
+            */}
+
+            {/* Game Play Grid */}
+            <div className={gameId ? 'col-4 mt-5' : 'd-none'}>
+                <h5>Play Game...</h5>
+                <div className="container-fluid">
+                    <div className="row">
+                        <div className="col-6 mx-auto">
+                            <table className="table table-bordered table-info">
+                                <tbody>
+                                    {renderGameplayGrid()}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
@@ -475,3 +548,11 @@ export default GamePlay;
 //'Setup the below Warships on the Battlefield' should come on the left
 //Start the Game should have a tooltip on cursor hover - 'Place the remaining x ships to start the game'
 //Tooltips for all the buttons/ ships, etc.
+//hide the grid setup once game is started - and display an empty grid!
+
+
+//Game chat only possible in a game room. Or maybe we want a public game room too for everyone?
+//whenever a game is started - a new WS connection should be established!! 
+
+//if a player is refreshing the page - get all the info via a new websocket call and populate the info in the ui
+//the timer will start from the time left in the game (via redis ttl)

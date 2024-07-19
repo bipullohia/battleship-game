@@ -9,20 +9,25 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker //enables WebSocket message handling, backed by a message broker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer{
+
+    /* configures a simple message broker for message handling
+    	1. enables a broker to send messages to clients/browsers via /chat prefix 
+    	2. sets the application destination prefix to /action
+    */
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry registry){ 
+        registry.enableSimpleBroker("/chat", "/play");
+        registry.setApplicationDestinationPrefixes("/action");
+    }
     
-    // configures WebSocket endpoints, /chat in this case, and enables SockJS fallback options
+    /* configures WebSocket endpoint, /game/battleship in this case, 
+    	and enables SockJS fallback options
+    */
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry){
         registry
-        .addEndpoint("/chat")
+        .addEndpoint("/game/battleship/ws")
         .setAllowedOrigins("http://localhost:3000") //for removing the CORS error
         .withSockJS();
-    }
-
-    //configures a simple message broker for message handling. It enables a broker to send messages to clients via /topic prefix and sets the application destination prefix to /app.
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry){ 
-        registry.enableSimpleBroker("/topic");
-        registry.setApplicationDestinationPrefixes("/app");
     }
 }

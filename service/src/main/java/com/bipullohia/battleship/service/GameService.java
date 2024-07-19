@@ -1,233 +1,79 @@
 package com.bipullohia.battleship.service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.bipullohia.battleship.model.Constants;
+import com.bipullohia.battleship.model.GameMove;
+import com.bipullohia.battleship.model.GamePlay;
+import com.bipullohia.battleship.model.GameStartResponse;
+import com.bipullohia.battleship.model.GameStatus;
 import com.bipullohia.battleship.model.ShipCollection;
-import com.bipullohia.battleship.model.ShipInfo;
-import com.bipullohia.battleship.model.ShipType;
+import com.bipullohia.battleship.util.GameUtils;
 
 @Service
 public class GameService {
 	
-	public boolean validateGridSetup(ShipCollection shipCollection) {
-		Set<String> cellSet = new HashSet<>(); //to ensure unique placement of each cell
+	@Autowired
+	private RedisTemplate<String, Object> redisTemplate;
+
+	
+	public GameStartResponse startGameAgainstComputer(GamePlay newgame) {
+		GameStartResponse gameResponse = new GameStartResponse();
+
+		//generate a gameId and return to the client (the client will use that to start the gameplay)
+		String newGameId = GameUtils.getNewGameId(); 
+		newgame.setGameId(newGameId);
 		
-		for(ShipInfo shipInfo: shipCollection.getAllShips()) {
-			System.out.println("Checking for ship: " + shipInfo.getShip().getShipName());
-			ShipType ship = shipInfo.getShip();
-			List<String> cells = shipInfo.getCells();
-			Collections.sort(cells); //
-			
-			//validate number of cells is valid for the ship
-			if(ship.getCellCount() != cells.size()){
-				System.out.println("Cell count is invalid for the ship: " + ship.getShipName()); //TODO: convert to LOGGER
-				return false;
-			}
-			
-			for(String cell: cells) {
-				//check for cell overlap
-				if(cellSet.contains(cell)) {
-					System.out.println("Duplicate cell used for ship placement: " + cell);
-					return false;
-				}
-				cellSet.add(cell);
+		//set game status as new (if it's vs computer) - otherwise wait for both players to setup the board
+		newgame.setGameStatus(GameStatus.NEW);
+		
+		//validate the grid of the ship (player1) passed on by the client
+		String playerGridValidity = GameUtils.validateGridSetup(newgame.getShipCollectionPlayer1());
+		
+		if(playerGridValidity.equals("true")) {
+			//generate the grid from the computer's side
+			ShipCollection newShipCollection = GameUtils.getNewPlacedShipCollection();
+			if(newShipCollection != null) {
+				newgame.setShipCollectionPlayer2(newShipCollection);
 				
-				//check for boundary limitations
-				if(!checkCellLimits(cell)) {
-					System.out.println("Cell is outside the Battlefield: " + cell);
-					return false;
-				}
-			}
+				//put both the grids in a temporary database and assign the key as the gameId
+				//TODO - try catch block?
+				redisTemplate.opsForValue().set(Constants.REDIS_GAMEINFO_PREFIX + newGameId, newgame);
+		        redisTemplate.expire(Constants.REDIS_GAMEINFO_PREFIX + newGameId, 30, TimeUnit.MINUTES); //expiry of 30 minutes for every valid game
+		        		        
+		        //we only want to set these for complete successful game creation - otherwise we only send back status msg of error
+				gameResponse.setGameId(newGameId);
+		        gameResponse.setGameSetupStatus("success");
 			
-			//check if the cells are in line
-			if(!checkCellAlignment(cells, ship.getCellCount())) {
-				System.out.println("Cells are not aligned properly for the ship: " + ship.getShipName());
-				return false;
+			}else {
+				gameResponse.setGameSetupStatus("error: problem occurred while setting up the grid for computer!");
 			}
-		}
-		//all good - validation passed!
-		System.out.println("Grid Validation successful!");
-		return true;
-	}
-	
-	//to make sure cells doesn't go out of the grid itself
-	private boolean checkCellLimits(String cell) {
-		char x = cell.charAt(0);
-		char y = cell.charAt(1);
-		
-		if(x-65 > Constants.GRID_SIZE || y-65 > Constants.GRID_SIZE) {
-			return false;
-		}
-		return true;
-	}
-	
-	//to check if the ship is placed properly (horizontal or vertical) - all the cells must align in a single direction without gaps
-	private boolean checkCellAlignment(List<String> cells, int cellCount) {
-		boolean isHorizontal = false; //direction of ship placement
-		int horizontalDiff = 0;
-		int verticalDiff = 0;
-		
-		//check for x or y direction (imagine cell 'AB' as xy)
-		if(Math.abs(cells.get(0).charAt(0) - cells.get(1).charAt(0)) == 0) {
-			isHorizontal = true; //no change in x coordinates -> horizontal placement
-		}
-		
-		//calculating the horizontal and vertical differences
-		for(int i=0; i<cellCount-1; i++) {
-			horizontalDiff += cells.get(i).charAt(1) - cells.get(i+1).charAt(1); //check diff between y elements of the cells
-			verticalDiff += cells.get(i).charAt(0) - cells.get(i+1).charAt(0); //check diff between x elements of the cells
-		}
-		
-		System.out.println("cellcount: " + cellCount + ", isHorizonta: " + isHorizontal + ", horizonDiff: " + horizontalDiff + ", vetDiff: " + verticalDiff);
-				
-		//the selected direction should have a difference of cellCount-1 (and the other direction difference should be 0)
-		if(isHorizontal) {
-			if(Math.abs(horizontalDiff) == cellCount-1 && Math.abs(verticalDiff) == 0) return true;
-			else return false;
+						
 		}else {
-			if(Math.abs(verticalDiff) == cellCount-1 && Math.abs(horizontalDiff) == 0) return true;
-			else return false;
+			//return an error saying the grid setup is incorrect - error handling
+			gameResponse.setGameSetupStatus(playerGridValidity);
 		}
+		
+		//return to the client - gameId (client uses this to communicate to BE for game moves via WS connection)
+		System.out.println("New game started: " + newGameId);
+		return gameResponse;
 	}
-	
-	//to create a new grid for player2 as computer
-	public ShipCollection getNewPlacedShipCollection() {
-		ShipCollection newShipCollection = new ShipCollection();
-		Set<String> cellSet = new HashSet<>();
-		Random random = new Random();
+
+	public GameMove processGameMove(GameMove move) {
+		//process the gamemove done by the player
 		
-		for(ShipInfo shipInfo: newShipCollection.getAllShips()) {
-			int cellCount = shipInfo.getShip().getCellCount();
-			while(shipInfo.getCells().size() < cellCount) {
-				//we need to retry until we get a proper ship placement on the grid
-				System.out.println("Ship placement starts...");
-				placeShipOnTheGrid(shipInfo, cellSet, random);
-			}
-			//ship is placed - add the cells to the cellSet for the next ship's placement check
-			cellSet.addAll(shipInfo.getCells());
-		}
+		//if the game is over - respond as such, otherwise computer plays it's turn
+		GameMove newGameMove = new GameMove();
+		newGameMove.setGameId(move.getGameId());
+		newGameMove.setPlayer("computer");
+		newGameMove.setCellId("GD");
 		
-		if(!validateGridSetup(newShipCollection)) {
-			//TODO: Throw an error and error out the process
-			System.out.println("New Player's Grid setup is invalid!");
-		}
-		
-		return newShipCollection;
+		return newGameMove;
 	}
-	
-	private void placeShipOnTheGrid(ShipInfo shipInfo, Set<String> cellSet, Random random) {
-		int cellCount = shipInfo.getShip().getCellCount();
-		List<String> directions = new ArrayList<>(Arrays.asList("left", "right", "up", "down"));
-		List<String> cells = new ArrayList<>();
-		String cell = getRandomUnusedCell(cellSet, random);
-		
-		//get cell placement based on a random direction
-		while(!directions.isEmpty()) {
-			int i = random.nextInt(directions.size()); //getting a random direction index out of the remaining ones
-			String direction = directions.get(i);
-			System.out.println("Direction: " + direction);
-			directions.remove(i); //this is so that the same direction is not repeated
-			System.out.println("Trying to place a ship at: " + direction);
-			
-			cells = getCellsForShip(cell, cellCount, cellSet, direction);
-			if(cells.size() > 0) break; //we got a proper alignment - no more direction needed!
-		}
-		//there is a chance that we didn't get a proper cell combination in any of the 4 directions - that is handled in the parent class
-		shipInfo.setCells(cells);
-	}
-	
-	private String getRandomUnusedCell(Set<String> cellSet, Random random) {
-		String cell = "";
-		
-		while(cell.isBlank()) {
-			char x = (char) (65+random.nextInt(Constants.GRID_SIZE));
-			char y = (char) (65+random.nextInt(Constants.GRID_SIZE));
-			String tempCell = String.valueOf(x) + String.valueOf(y);
-			//continue only if this cell is not already used for another ship
-			if(!cellSet.contains(tempCell)) {
-				cell = tempCell;
-			}
-		}
-		System.out.println("Fetched random unused cell: " + cell);
-		return cell;
-	}
-	
-	private List<String> getCellsForShip(String cell, int cellCount, Set<String> cellSet, String direction){
-		List<String> cells = new ArrayList<>();
-		
-		//check all the cells are in the range of the grid - depending on the direction
-		//we want to make sure (cellCount-1) cells can be placed in that direction. -1 because we have the base cell already
-		int x = cell.charAt(0) - 65;
-		int y = cell.charAt(1) - 65;
-		
-		if(direction.equals("left")) {
-			if(y - (cellCount-1) >= 0) {
-				for(int i=0; i<cellCount; i++) {
-					cells.add(String.valueOf((char)(x+65))+String.valueOf((char)(y-i+65)));
-				}
-			}
-		}else if(direction.equals("right")) {
-			if(y + (cellCount-1) < Constants.GRID_SIZE) {
-				for(int i=0; i<cellCount; i++) {
-					cells.add(String.valueOf((char)(x+65))+String.valueOf((char)(y+i+65)));
-				}
-			}
-		}else if(direction.equals("up")) {
-			if(x - (cellCount-1) >= 0) {
-				for(int i=0; i<cellCount; i++) {
-					cells.add(String.valueOf((char)(x-i+65))+String.valueOf((char)(y+65)));
-				}
-			}
-		}else {
-			//down
-			if(x + (cellCount-1) < Constants.GRID_SIZE) {
-				for(int i=0; i<cellCount; i++) {
-					cells.add(String.valueOf((char)(x+i+65))+String.valueOf((char)(y+65)));
-				}
-			}
-		}
-		
-		//check if they are unused
-		for(String c: cells) {
-			if(cellSet.contains(c)) return new ArrayList<>(); //returning an empty list since the entire cells list is invalid
-		}
-		
-		return cells;
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	
