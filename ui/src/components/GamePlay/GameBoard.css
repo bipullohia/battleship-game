@@ -4,8 +4,8 @@
 
 /* Backgroud Colors for different ships while they are selected (hovered) */
 .cell-bg-validposition-carrier {
-    background-color:  #ed929b !important;
-} 
+    background-color: #ed929b !important;
+}
 
 .cell-bg-validposition-battleship {
     background-color: #f8de93 !important;
@@ -25,8 +25,8 @@
 
 /* Backgroud Colors for different ships once they are placed */
 .cell-bg-placedposition-carrier {
-    background-color:  #dc3545 !important;
-} 
+    background-color: #dc3545 !important;
+}
 
 .cell-bg-placedposition-battleship {
     background-color: #ffc107 !important;

@@ -1,10 +1,10 @@
-import GameChat from './gamechat/GameChat';
-import GamePlay from './gameplay/GamePlay';
+import GamePlay from '../components/GamePlay/GameBoard';
+import GameChat from '../components/GameChat/GameChat';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 
-function HomeContainer(){
+const BattleshipHomePage = () => {
     return(
         <div style={{ height: '100vh' }}>
             <Body />
@@ -21,7 +21,7 @@ function HomeContainer(){
 //     )
 // }
 
-function Body(){
+const Body = () => {
     return(
         <Container fluid>
             <Row style={{ height: '100vh' }}>
@@ -41,4 +41,4 @@ function Body(){
     2. cert on ws connection
     3. gameplay settings - to hide the cellId and placement cells (green badges)
     */
-export default HomeContainer;
+export default BattleshipHomePage;

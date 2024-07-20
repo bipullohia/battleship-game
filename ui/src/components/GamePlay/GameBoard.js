@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react"
-import { DefaultMessages as Msg } from "../constants";
-import { Props as Values } from "../constants"
-import './GamePlay.css'
+import { DefaultMessages as Msg } from "../../utils/constants";
+import { Props as Values } from "../../utils/constants"
 import { Stomp } from '@stomp/stompjs'
 import SockJS from "sockjs-client";
+import './GameBoard.css'
 
-function GamePlay() {
+const GamePlay = () => {
 
     //to store various state objects for grid setup
     const [gridSetupMode, setGridSetupMode] = useState(false);
@@ -17,8 +17,8 @@ function GamePlay() {
 
     //to store various game related info while it's running
     const [gameId, setGameId] = useState('');
-    const [playerCells, setPlayerCells] = useState('');
-    const [opponentCells, setOpponentCells] = useState('');
+    // const [playerCells, setPlayerCells] = useState('');
+    // const [opponentCells, setOpponentCells] = useState('');
     
     //websocket connection details
     const [isWSConnected, setIsWSConnected] = useState(false);

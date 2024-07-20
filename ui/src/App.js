@@ -1,10 +1,9 @@
-import './App.css';
-import HomeContainer from './HomeContainer';
+import BattleshipHomePage from './pages/BattleshipHomePage';
 
 function App() {
   return (
-    <div className="App"> 
-      <HomeContainer/>
+    <div className="BattleShipHomePage text-center"> 
+      <BattleshipHomePage/>
     </div>
   );
 }

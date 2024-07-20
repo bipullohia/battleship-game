@@ -3,7 +3,7 @@ import { Stomp } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 import './GameChat.css'
 
-function GameChat() {
+const GameChat = () => {
     const [username, setUsername] = useState('');
     const [chatMessage, setChatMessage] = useState('');
     const [joinedChat, setJoinedChat] = useState(false);
@@ -26,8 +26,8 @@ function GameChat() {
         const newClient = Stomp.over(socket);
 
         //depending on public or private chat - this can differ - we can send to different topics
-        newClient.connect({}, () => {
-            console.log("Connected to websocket...");
+        newClient.connect({}, (frame) => {
+            console.log("Connected to websocket: " + frame);
 
             //subscribes to a topic to listen to the incoming messages
             newClient.subscribe('/chat/public', (message) => {
@@ -102,7 +102,7 @@ function GameChat() {
         }
     }
     
-    
+
     return (
         <div>
             <h5 className="fw-bolder mt-3">Game Chatroom!</h5>
