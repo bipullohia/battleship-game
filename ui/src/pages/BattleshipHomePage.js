@@ -5,7 +5,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 
 const BattleshipHomePage = () => {
-    return(
+    return (
         <div style={{ height: '100vh' }}>
             {/* potential header <Header/> */}
             <Body />
@@ -14,14 +14,14 @@ const BattleshipHomePage = () => {
 }
 
 const Body = () => {
-    return(
+    return (
         <Container fluid>
             <Row style={{ height: '100vh' }}>
                 <Col className='gameplay-bg col-9'>
-                    <GameBoard/>
+                    <GameBoard />
                 </Col>
                 <Col className='gamechat-bg col-3'>
-                    <GameChat/>
+                    <GameChat />
                 </Col>
             </Row>
         </Container>

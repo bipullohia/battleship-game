@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react"
-import { DEFAULT_SHIP_INFO, CONSTANT_PROPS, WS_CONFIG, MESSAGES } from "../../utils/constants";
+import { CONSTANT_PROPS, WS_CONFIG, MESSAGES } from "../../utils/constants";
 import { Stomp } from '@stomp/stompjs'
 import SockJS from "sockjs-client";
 import './GameBoard.css'
 import Grid from "./Grid";
 import GameSetup from "./GameSetup.js";
+import { useDispatch } from "react-redux";
+import { resetShipInfo } from "../../store/slices/shipInfoSlice.js";
 
 const GamePlay = () => {
+    const dispatch = useDispatch();
 
     //to store various state objects for grid setup
     const [gridSetupMode, setGridSetupMode] = useState(false);
@@ -15,9 +18,6 @@ const GamePlay = () => {
     const [selectedShip, setSelectedShip] = useState('');
     const [selectedCells, setSelectedCells] = useState([]);
     const [placedCells, setPlacedCells] = useState([]);
-
-    //ship placements on the grid
-    const [shipInfo, setShipInfo] = useState({ ...DEFAULT_SHIP_INFO });
 
     //websocket connection details
     const stompClientRef = useRef(null); //for ws connection
@@ -31,7 +31,7 @@ const GamePlay = () => {
         };
     }, []);
 
-    
+
     const initiateWSConnection = () => {
         const socket = new SockJS(WS_CONFIG.URL);
         const stompClient = Stomp.over(socket);
@@ -64,12 +64,12 @@ const GamePlay = () => {
             </div>
         )
     }
-    
+
     const restartGame = () => {
         setGridSetupMode(false);
         resetGrid();
     }
-    
+
     const resetGrid = () => {
         //set state variables to default
         setPlacedShipCount(0);
@@ -78,17 +78,15 @@ const GamePlay = () => {
         setSelectedCells([]);
         setPlacedCells([]);
         //restore ship status
-        setShipInfo({ ...DEFAULT_SHIP_INFO });
+        dispatch(resetShipInfo());
     }
 
     const gridProps = {
-        shipInfo: shipInfo,
         shipDirection: shipDirection,
         selectedShip: selectedShip,
         selectedCells: selectedCells,
         placedCells: placedCells,
         placedShipCount: placedShipCount,
-        setShipInfo: setShipInfo,
         setSelectedShip: setSelectedShip,
         setSelectedCells: setSelectedCells,
         setPlacedCells: setPlacedCells,
@@ -97,7 +95,6 @@ const GamePlay = () => {
 
     const gameSetupProps = {
         stompClientRef: stompClientRef,
-        shipInfo: shipInfo,
         selectedShip: selectedShip,
         shipDirection: shipDirection,
         placedShipCount: placedShipCount,
@@ -109,7 +106,7 @@ const GamePlay = () => {
 
     return (
         <div>
-            <h4 className="my-4">{MESSAGES.GAME_HEADER}</h4>
+            <h4 className="my-3">{MESSAGES.GAME_HEADER}</h4>
             <div className="row">
                 <div className="col-4">
                     {gameRules()}
@@ -117,10 +114,10 @@ const GamePlay = () => {
                     <button type="button" className={gridSetupMode ? 'btn btn-danger mt-5 btn-lg' : 'd-none'} onClick={() => restartGame()}>Start from Beginning</button>
                 </div>
                 <div className="col-8">
-                    <Grid gridProps={gridProps}/>
+                    <Grid gridProps={gridProps} />
                 </div>
             </div>
-            {gridSetupMode ? <GameSetup gameSetupProps={gameSetupProps}/> : null}
+            {gridSetupMode ? <GameSetup gameSetupProps={gameSetupProps} /> : null}
         </div>
     )
 }
@@ -139,7 +136,6 @@ export default GamePlay;
 
 
 //Game chat only possible in a game room. Or maybe we want a public game room too for everyone?
-//whenever a game is started - a new WS connection should be established!! 
 
 //if a player is refreshing the page - get all the info via a new websocket call and populate the info in the ui
 //the timer will start from the time left in the game (via redis ttl)

@@ -1,10 +1,19 @@
+import { useDispatch, useSelector } from "react-redux";
 import { CONSTANT_PROPS } from "../../utils/constants";
+import { updateShipInfo } from "../../store/slices/shipInfoSlice";
 
 const Grid = ({ gridProps }) => {
-    const { shipInfo, shipDirection, selectedShip, selectedCells, placedCells, placedShipCount,
-            setSelectedShip, setShipInfo, setSelectedCells, setPlacedCells, setPlacedShipCount
-     } = gridProps;
+    const dispatch = useDispatch();
 
+    const { shipDirection, selectedShip, selectedCells, placedCells, placedShipCount,
+        setSelectedShip, setSelectedCells, setPlacedCells, setPlacedShipCount
+    } = gridProps;
+
+    const shipInfo = useSelector((state) => state.shipInfo);
+
+    const updateShips = (newShipInfo) => {
+        dispatch(updateShipInfo(newShipInfo));
+    }
 
     const cellHoverAction = (cellId) => {
         if (selectedShip && !placedCells.includes(cellId)) {
@@ -129,10 +138,10 @@ const Grid = ({ gridProps }) => {
                 setPlacedShipCount(prevPlacedShipCount => ++prevPlacedShipCount);
 
                 //update ship info with cell positions and shipPlaced as true
-                const newShipInfo = shipInfo;
+                const newShipInfo = JSON.parse(JSON.stringify(shipInfo));
                 newShipInfo[selectedShip].shipPlaced = true;
                 newShipInfo[selectedShip].cells = selectedCells;
-                setShipInfo(newShipInfo);
+                updateShips(newShipInfo);
 
                 //reset selected items
                 setSelectedCells([]);

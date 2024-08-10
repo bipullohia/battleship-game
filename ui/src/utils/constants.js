@@ -15,11 +15,11 @@ export const CONSTANT_PROPS = Object.freeze({
 //all WebSocket related info
 export const WS_CONFIG = Object.freeze({
     URL: 'http://localhost:8080/game/battleship/ws',
-    
+
     //topics to subscribe to via WS
     READ_PATH_CHAT: '/chat/public',
     READ_PATH_GAMEMOVE: '/play/public',
-    
+
     //path where we send our chat/move via WS
     WRITE_PATH_CHAT: '/action/msg',
     WRITE_PATH_GAMEMOVE: '/action/move'
@@ -28,7 +28,7 @@ export const WS_CONFIG = Object.freeze({
 //all Http related info
 export const HTTP_CONFIG = Object.freeze({
     URL: 'http://localhost:8080/game/battleship/http',
-    
+
     //api paths
     PATH_START_GAME: '/startgame'
 });
