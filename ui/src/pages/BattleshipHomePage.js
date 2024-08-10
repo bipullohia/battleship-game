@@ -1,5 +1,5 @@
-import GamePlay from '../components/GamePlay/GameBoard';
-import GameChat from '../components/GameChat/GameChat';
+import GameBoard from '../components/GameBoard';
+import GameChat from '../components/GameChat';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
@@ -7,26 +7,18 @@ import Col from 'react-bootstrap/Col';
 const BattleshipHomePage = () => {
     return(
         <div style={{ height: '100vh' }}>
+            {/* potential header <Header/> */}
             <Body />
         </div>
     )
 }
-
-// function Header(){
-//     return(
-//         <div>
-//             <h2>BattleShip</h2>
-//             <h6>You can play the classic game of BattleShip here while chatting along with your friends!</h6>
-//         </div>
-//     )
-// }
 
 const Body = () => {
     return(
         <Container fluid>
             <Row style={{ height: '100vh' }}>
                 <Col className='gameplay-bg col-9'>
-                    <GamePlay/>
+                    <GameBoard/>
                 </Col>
                 <Col className='gamechat-bg col-3'>
                     <GameChat/>

@@ -63,6 +63,8 @@ public class GameService {
 		return gameResponse;
 	}
 
+	//We can check the new game loaded in Redis UI in local at: http://127.0.0.1:8081 (don't forget to run redis-commander in terminal)
+	
 	public GameMove processGameMove(GameMove move) {
 		//process the gamemove done by the player
 		
