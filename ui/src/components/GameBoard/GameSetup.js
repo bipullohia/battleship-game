@@ -1,32 +1,16 @@
-import { useState } from "react";
-import { CONSTANT_PROPS, HTTP_CONFIG, MESSAGES, WS_CONFIG } from "../../utils/constants";
+import { CONSTANT_PROPS, HTTP_CONFIG, MESSAGES } from "../../utils/constants";
 import { useSelector } from "react-redux";
 
 const GameSetup = ({ gameSetupProps }) => {
-    const { stompClientRef, selectedShip, shipDirection, placedShipCount,
-        initiateWSConnection, resetGrid, setSelectedShip, setShipDirection
+    const { selectedShip, shipDirection, placedShipCount,
+        initiateWSConnectionForGame, resetGrid, setSelectedShip, setShipDirection
     } = gameSetupProps;
 
     const shipInfo = useSelector((state) => state.shipInfo);
 
-    //to store various game related info while it's running
-    const [gameId, setGameId] = useState('');
-
     const selectAShip = (ship) => {
         setSelectedShip(ship);
     }
-
-    /*
-    const sendGameMove = (cellId) => {
-        if (stompClientRef.current && stompClientRef.current.connected) {
-            stompClientRef.current.send(WS_CONFIG.WRITE_PATH_GAMEMOVE, {}, JSON.stringify({
-                'gameId': gameId,
-                'player': 'player',
-                'cellId': cellId
-            }));
-        }
-    };
-    */
 
     const renderShipPlacementStatusMsg = () => {
         //depending on the ship placement/selected status - render a alert message
@@ -79,10 +63,11 @@ const GameSetup = ({ gameSetupProps }) => {
             console.log(`Http resp: ' + ${JSON.stringify(result)}`);
 
             if (result && result.gameId) {
-                setGameId(result.gameId);
+                //setGameId(result.gameId); TODO: set this gameId in the session or store
+                console.log(result.gameId);
 
                 //we have the gameId, we are ready to start game. Establish a ws connection
-                initiateWSConnection();
+                initiateWSConnectionForGame();
             }
         } catch (error) {
             console.error(`Error caught: ${error}`);

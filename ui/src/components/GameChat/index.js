@@ -1,54 +1,53 @@
-import { useState, useRef } from 'react'
-import { Stomp } from '@stomp/stompjs'
-import SockJS from 'sockjs-client'
+import { useState, useRef, useEffect } from 'react'
 import './GameChat.css'
 import ChatBox from './ChatBox'
 import { WS_CONFIG } from '../../utils/constants'
+import { websocketService } from '../../store'
 
 const GameChat = () => {
     const [username, setUsername] = useState('');
     const [joinedChat, setJoinedChat] = useState(false);
     const [rejoinedChat, setRejoinedChat] = useState(false); //once you rejoin - you can never technically 'join' as a new user again
-    const [client, setClient] = useState(null);
     const [messages, setMessages] = useState([]);
 
     const chatMessageRef = useRef(null);
     const chatUsernameRef = useRef(null);
 
+    //for ws connection
+    const [isChatActive, setIsChatActive] = useState(false);
 
-    const joinChatRoom = () => {
+    useEffect(() => {
+        //clean up when component unmounts
+        return () => {
+            if (isChatActive) {
+                websocketService.disconnect();
+            }
+        }
+    }, [isChatActive]);
+
+    const joinChatRoom = async () => {
         setJoinedChat(true);
         setRejoinedChat(false);
-        createWebsocketConnection();
-    }
 
-    const createWebsocketConnection = () => {
-        const socket = new SockJS(WS_CONFIG.URL);
-        const newClient = Stomp.over(socket);
+        try {
+            await websocketService.connect();
+            setIsChatActive(true);
 
-        //depending on public or private chat - this can differ - we can send to different topics
-        newClient.connect({}, (frame) => {
-            console.log("Connected to websocket: " + frame);
+            //subscribe to chat messages so we can receive the messages
+            websocketService.subscribe(WS_CONFIG.READ_PATH_CHAT, handleNewChatMessage);
 
-            //subscribes to a topic to listen to the incoming messages
-            newClient.subscribe(WS_CONFIG.READ_PATH_CHAT, (message) => {
-                //working with the message received
-                const receivedMsg = JSON.parse(message.body);
-                setMessages((prevMsgs) => [...prevMsgs, receivedMsg]);
-            });
-
-            //sending a new message to /hello
-            newClient.send(WS_CONFIG.WRITE_PATH_CHAT, {}, JSON.stringify({
+            //send the join chat message
+            websocketService.sendMessage(WS_CONFIG.WRITE_PATH_CHAT, {
                 'sender': username,
                 'type': 'JOIN'
-            }));
+            });
+        } catch (error) {
+            console.error('Failed to start chat - websocket connection setup issue', error);
+        }
+    }
 
-            chatMessageRef.current.focus();
-        }, (error) => {
-            console.log('Failed to connect to the WebSocket', error);
-        });
-
-        setClient(newClient);
+    const handleNewChatMessage = (message) => {
+        setMessages(prevMsgs => [...prevMsgs, message]);
     }
 
     const leaveChatRoom = () => {
@@ -58,21 +57,12 @@ const GameChat = () => {
     }
 
     const removeWebSocketConnection = () => {
-        if (client) {
-            //sending a msg before leaving the chat
-            client.send(WS_CONFIG.WRITE_PATH_CHAT, {}, JSON.stringify({
-                'sender': username,
-                'type': 'LEAVE'
-            }));
-            client.deactivate();
-            setClient(null);
-            console.log('Websocket connection deactivated...');
-
-            //resetting the username field
-            // setUsername('');
-            // chatUsernameRef.current.value = '';
-            // chatUsernameRef.current.focus(); //doesn't work yet
-        }
+        //send the Leave chat message
+        websocketService.sendMessage(WS_CONFIG.WRITE_PATH_CHAT, {
+            'sender': username,
+            'type': 'LEAVE'
+        });
+        websocketService.disconnect();
     }
 
     const handleEnterForUsernameSubmit = (e) => {
@@ -82,10 +72,9 @@ const GameChat = () => {
     }
 
     const chatProps = {
-        client: client,
         username: username,
         chatMessageRef: chatMessageRef,
-        joinedChat, joinedChat,
+        joinedChat: joinedChat,
         messages: messages
     }
 
@@ -118,4 +107,8 @@ const GameChat = () => {
 
 export default GameChat;
 
-//TODO: when a new user connects to the server with the username - we need to tell it all the others who have already connected to the chat server.
+/*TODO: 
+1. When a new user connects to the server with the username - we need to tell it all the others who have already connected to the chat server.
+2. Think if we want to present a new username or old one - when we leave the chat! Show the old username in the field?
+3. Rethink the entire re-join chat thing? 
+*/

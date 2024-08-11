@@ -1,14 +1,13 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { CONSTANT_PROPS, WS_CONFIG, MESSAGES } from "../../utils/constants";
-import { Stomp } from '@stomp/stompjs'
-import SockJS from "sockjs-client";
 import './GameBoard.css'
 import Grid from "./Grid";
 import GameSetup from "./GameSetup.js";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { resetShipInfo } from "../../store/slices/shipInfoSlice.js";
+import { websocketService } from '../../store'
 
-const GamePlay = () => {
+const GameBoard = () => {
     const dispatch = useDispatch();
 
     //to store various state objects for grid setup
@@ -19,33 +18,45 @@ const GamePlay = () => {
     const [selectedCells, setSelectedCells] = useState([]);
     const [placedCells, setPlacedCells] = useState([]);
 
-    //websocket connection details
-    const stompClientRef = useRef(null); //for ws connection
+    //for ws connection
+    const [isGameOn, setIsGameOn] = useState(false);
+
+    const wsconnected = useSelector((state) => state.websocket.connected);
 
     useEffect(() => {
         //cleanup func to close ws connection when component unmounts
         return () => {
-            if (stompClientRef.current) {
-                stompClientRef.current.deactivate();
+            if (isGameOn) {
+                websocketService.disconnect();
             }
-        };
-    }, []);
+        }
+    }, [isGameOn]);
 
+    // const sendGameMove = (cellId) => {
+    //     websocketService.sendMessage(WS_CONFIG.WRITE_PATH_GAMEMOVE, {
+    //         'gameId': 'GameId1',
+    //         'player': 'player',
+    //         'cellId': cellId
+    //     });
+    // }
 
-    const initiateWSConnection = () => {
-        const socket = new SockJS(WS_CONFIG.URL);
-        const stompClient = Stomp.over(socket);
+    const initiateWSConnectionForGame = async () => {
+        try {
+            await websocketService.connect();
+            setIsGameOn(true);
 
-        stompClient.connect({}, (frame) => {
-            console.log("Connected to game websocket: " + frame);
-            stompClient.subscribe(WS_CONFIG.READ_PATH_GAMEMOVE, (msg) => {
-                console.log("Message from ws game server: " + msg.body);
+            //subscribe to game move responses
+            websocketService.subscribe(WS_CONFIG.READ_PATH_GAMEMOVE, (message) => console.log(message));
+
+            //send a sample game move to set the status of the game as 'in progress'
+            websocketService.sendMessage(WS_CONFIG.WRITE_PATH_GAMEMOVE, {
+                'gameId': 'SampleGameId',
+                'player': 'player',
+                'cellId': 'Sample'
             });
-        }, (error) => {
-            console.log("Error while connection to game websocket: ", error);
-        });
-
-        stompClientRef.current = stompClient;
+        } catch (error) {
+            console.error('Failed to start game - websocket connection setup issue', error);
+        }
     }
 
     const gameRules = () => {
@@ -61,6 +72,8 @@ const GamePlay = () => {
                     <li>In the meantime, your opponent will also be setting up their own grid</li>
                     <li>Once the game starts, the first to sink all the ships of the opponent wins!</li>
                 </ol>
+                <div>WebSocket connected: {wsconnected ? 'Yes' : 'No'}</div>
+                {/* <button onClick={() => sendGameMove('QT')}>GameMove</button> */}
             </div>
         )
     }
@@ -94,11 +107,10 @@ const GamePlay = () => {
     }
 
     const gameSetupProps = {
-        stompClientRef: stompClientRef,
         selectedShip: selectedShip,
         shipDirection: shipDirection,
         placedShipCount: placedShipCount,
-        initiateWSConnection: initiateWSConnection,
+        initiateWSConnectionForGame: initiateWSConnectionForGame,
         resetGrid: resetGrid,
         setSelectedShip: setSelectedShip,
         setShipDirection: setShipDirection
@@ -122,7 +134,7 @@ const GamePlay = () => {
     )
 }
 
-export default GamePlay;
+export default GameBoard;
 
 //TODOs...
 //Implement 'Start the Game'
@@ -133,7 +145,6 @@ export default GamePlay;
 //Start the Game should have a tooltip on cursor hover - 'Place the remaining x ships to start the game'
 //Tooltips for all the buttons/ ships, etc.
 //hide the grid setup once game is started - and display an empty grid!
-
 
 //Game chat only possible in a game room. Or maybe we want a public game room too for everyone?
 

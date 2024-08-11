@@ -1,20 +1,22 @@
 import { useState } from "react";
+import { websocketService } from '../../store'
+import { WS_CONFIG } from "../../utils/constants";
 
 const ChatBox = ({ chatProps }) => {
-    const { client, username, chatMessageRef, joinedChat, messages } = chatProps;
+    const { username, chatMessageRef, joinedChat, messages
+    } = chatProps;
     const [chatMessage, setChatMessage] = useState('');
 
     const sendChatMessage = () => {
-        if (client) {
-            client.send("/action/msg", {}, JSON.stringify({
-                'sender': username,
-                'type': 'MSG',
-                'content': chatMessage
-            }));
-            setChatMessage('');
-            chatMessageRef.current.value = '';
-            chatMessageRef.current.focus();
-        }
+        websocketService.sendMessage(WS_CONFIG.WRITE_PATH_CHAT, { 
+            'sender': username,
+            'type': 'MSG',
+            'content': chatMessage 
+        });
+        
+        setChatMessage('');
+        chatMessageRef.current.value = '';
+        chatMessageRef.current.focus();
     }
 
     const handleEnterForMessageSent = (e) => {
