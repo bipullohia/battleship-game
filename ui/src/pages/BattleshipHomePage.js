@@ -3,6 +3,8 @@ import GameChat from '../components/GameChat';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import { useSelector } from 'react-redux';
+import GameArea from '../components/GameArea';
 
 const BattleshipHomePage = () => {
     return (
@@ -14,11 +16,13 @@ const BattleshipHomePage = () => {
 }
 
 const Body = () => {
+    const gameId = useSelector((state) => state.gameInfo.gameId);
+
     return (
         <Container fluid>
             <Row style={{ height: '100vh' }}>
                 <Col className='gameplay-bg col-9'>
-                    <GameBoard />
+                    {gameId ? <GameArea /> : <GameBoard />}
                 </Col>
                 <Col className='gamechat-bg col-3'>
                     <GameChat />

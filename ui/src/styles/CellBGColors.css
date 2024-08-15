@@ -44,6 +44,19 @@
     background-color: #198754 !important;
 }
 
+/* Backgroud Colors for Grid cells once the game is started */
+.cell-bg-primarygrid-default {
+    background-color: #c1d6f4 !important;
+}
+
+.cell-bg-primarygrid-default-hover {
+    background-color: #fff897 !important;
+}
+
+.cell-bg-secondarygrid-default {
+    background-color: #c1d6f4 !important;
+}
+
 .cursor-notallowed {
     cursor: not-allowed;
 }

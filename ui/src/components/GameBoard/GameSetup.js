@@ -1,12 +1,16 @@
+import { updateGameInfo } from "../../store/slices/gameInfoSlice";
 import { CONSTANT_PROPS, HTTP_CONFIG, MESSAGES } from "../../utils/constants";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 const GameSetup = ({ gameSetupProps }) => {
     const { selectedShip, shipDirection, placedShipCount,
         initiateWSConnectionForGame, resetGrid, setSelectedShip, setShipDirection
     } = gameSetupProps;
 
+    const dispatch = useDispatch();
+
     const shipInfo = useSelector((state) => state.shipInfo);
+    const gameInfo = useSelector((state) => state.gameInfo);
 
     const selectAShip = (ship) => {
         setSelectedShip(ship);
@@ -63,11 +67,15 @@ const GameSetup = ({ gameSetupProps }) => {
             console.log(`Http resp: ' + ${JSON.stringify(result)}`);
 
             if (result && result.gameId) {
-                //setGameId(result.gameId); TODO: set this gameId in the session or store
                 console.log(result.gameId);
 
                 //we have the gameId, we are ready to start game. Establish a ws connection
                 initiateWSConnectionForGame();
+
+                //set gameId - this will trigger the Game Play
+                const newGameInfo = JSON.parse(JSON.stringify(gameInfo));
+                newGameInfo.gameId = result.gameId;
+                dispatch(updateGameInfo(newGameInfo));
             }
         } catch (error) {
             console.error(`Error caught: ${error}`);
@@ -78,7 +86,7 @@ const GameSetup = ({ gameSetupProps }) => {
     return (
         <div className={'col-12'}>
             <div className="mx-auto col-12">
-                <h5 className="mt-2 fw-bold mb-4">Setup the below ships on the Battlefield:</h5>
+                <h5 className="mt-2 fw-bold mb-4">To start the game, setup the below ships on your Battlefield:</h5>
                 <div className="row">
                     <div className="col-6 ps-5">
                         <div className="row mb-2 justify-content-center">

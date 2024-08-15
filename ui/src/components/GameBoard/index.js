@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { CONSTANT_PROPS, WS_CONFIG, MESSAGES } from "../../utils/constants";
-import './GameBoard.css'
-import Grid from "./Grid";
+import '../../styles/CellBGColors.css'
+import GameSetupGrid from "./GameSetupGrid.js";
 import GameSetup from "./GameSetup.js";
 import { useDispatch, useSelector } from "react-redux";
 import { resetShipInfo } from "../../store/slices/shipInfoSlice.js";
@@ -11,7 +11,7 @@ const GameBoard = () => {
     const dispatch = useDispatch();
 
     //to store various state objects for grid setup
-    const [gridSetupMode, setGridSetupMode] = useState(false);
+    // const [gridSetupMode, setGridSetupMode] = useState(false);
     const [placedShipCount, setPlacedShipCount] = useState(0);
     const [shipDirection, setShipDirection] = useState(CONSTANT_PROPS.DEFAULT_SHIP_DIRECTION);
     const [selectedShip, setSelectedShip] = useState('');
@@ -31,14 +31,6 @@ const GameBoard = () => {
             }
         }
     }, [isGameOn]);
-
-    // const sendGameMove = (cellId) => {
-    //     websocketService.sendMessage(WS_CONFIG.WRITE_PATH_GAMEMOVE, {
-    //         'gameId': 'GameId1',
-    //         'player': 'player',
-    //         'cellId': cellId
-    //     });
-    // }
 
     const initiateWSConnectionForGame = async () => {
         try {
@@ -73,14 +65,8 @@ const GameBoard = () => {
                     <li>Once the game starts, the first to sink all the ships of the opponent wins!</li>
                 </ol>
                 <div>WebSocket connected: {wsconnected ? 'Yes' : 'No'}</div>
-                {/* <button onClick={() => sendGameMove('QT')}>GameMove</button> */}
             </div>
         )
-    }
-
-    const restartGame = () => {
-        setGridSetupMode(false);
-        resetGrid();
     }
 
     const resetGrid = () => {
@@ -122,14 +108,12 @@ const GameBoard = () => {
             <div className="row">
                 <div className="col-4">
                     {gameRules()}
-                    <button type="button" className={gridSetupMode ? 'd-none' : 'btn btn-success mt-5 btn-lg'} onClick={() => setGridSetupMode(true)}>Set your Grid</button>
-                    <button type="button" className={gridSetupMode ? 'btn btn-danger mt-5 btn-lg' : 'd-none'} onClick={() => restartGame()}>Start from Beginning</button>
                 </div>
                 <div className="col-8">
-                    <Grid gridProps={gridProps} />
+                    <GameSetupGrid gridProps={gridProps} />
                 </div>
             </div>
-            {gridSetupMode ? <GameSetup gameSetupProps={gameSetupProps} /> : null}
+            {<GameSetup gameSetupProps={gameSetupProps}/>}
         </div>
     )
 }
