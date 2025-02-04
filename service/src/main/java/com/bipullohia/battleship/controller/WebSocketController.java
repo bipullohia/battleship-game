@@ -15,7 +15,7 @@ public class WebSocketController {
 	@Autowired
 	private GameService gameService;
 
-    @MessageMapping("/msg") //handles messages sent by the players
+    @MessageMapping("/msg") //handles the chat messages sent by the players
     @SendTo("/chat/public")
     public ChatMessage sendMessage(ChatMessage message){
         System.out.println("Chat message: " + message);

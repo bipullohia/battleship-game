@@ -5,6 +5,7 @@ import SecondaryPlayerGrid from "./SecondaryPlayerGrid";
 
 const GameArea = () => {
     const gameId = useSelector((state) => state.gameInfo.gameId);
+    const wsconnected = useSelector((state) => state.websocket.connected);
 
     const abortGame = () => {
         alert('Abort game?');
@@ -33,6 +34,9 @@ const GameArea = () => {
                     <div className="badge mt-5 bg-warning text-dark">GameId: {gameId}</div>
                     <div>
                         <button type="button" className="col-3 btn btn-danger fw-bold my-3" onClick={() => abortGame()}>Abort Game</button>
+                    </div>
+                    <div>
+                        <div className="fw-light">Websocket Connected: {wsconnected ? 'Yes': 'No'}</div>
                     </div>
                 </div>
             </div>

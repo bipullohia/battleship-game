@@ -21,12 +21,12 @@ const Body = () => {
     return (
         <Container fluid>
             <Row style={{ height: '100vh' }}>
-                <Col className='gameplay-bg col-9'>
+                <Col className='gameplay-bg'> {/*col-9*/}
                     {gameId ? <GameArea /> : <GameBoard />}
                 </Col>
-                <Col className='gamechat-bg col-3'>
+                {/* <Col className='gamechat-bg col-3'>
                     <GameChat />
-                </Col>
+                </Col> */}
             </Row>
         </Container>
     )
@@ -36,5 +36,6 @@ const Body = () => {
     1. dark mode support
     2. cert on ws connection
     3. gameplay settings - to hide the cellId and placement cells (green badges)
+    4. we are sending websocket messages to everyone right now- reduce it to only concerned computers (via subscribe?)
     */
 export default BattleshipHomePage;

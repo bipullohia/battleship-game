@@ -48,6 +48,7 @@ public class GameService {
 		        //we only want to set these for complete successful game creation - otherwise we only send back status msg of error
 				gameResponse.setGameId(newGameId);
 		        gameResponse.setGameSetupStatus("success");
+		        gameResponse.setShipCollectionPlayer1(newgame.getShipCollectionPlayer1());
 			
 			}else {
 				gameResponse.setGameSetupStatus("error: problem occurred while setting up the grid for computer!");
@@ -66,13 +67,32 @@ public class GameService {
 	//We can check the new game loaded in Redis UI in local at: http://127.0.0.1:8081 (don't forget to run redis-commander in terminal)
 	
 	public GameMove processGameMove(GameMove move) {
-		//process the gamemove done by the player
+		
+		if(move.getCellId().equalsIgnoreCase("Sample"))
+			//set game status in redis as 'in progress' - check if we even need this piece?
+			return null;
+		
+		
+		//process the game move done by the player
+		
+//		if(!StringUtils.isBlank(move.getGameId())) {
+//			//search if the game exists in the db
+//		}else {
+//			//gameId sent doesn't exist - throw an error?
+//			
+//		}
+//		
 		
 		//if the game is over - respond as such, otherwise computer plays it's turn
 		GameMove newGameMove = new GameMove();
 		newGameMove.setGameId(move.getGameId());
 		newGameMove.setPlayer("computer");
-		newGameMove.setCellId("GD");
+		
+		
+		//select a random 
+		//TODO: remove this logic later to simplify
+		
+		newGameMove.setCellId(GameUtils.getNextGameMove());
 		
 		return newGameMove;
 	}

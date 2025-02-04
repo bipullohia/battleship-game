@@ -16,7 +16,8 @@ import com.bipullohia.battleship.model.ShipType;
 public class GameUtils {
 
 	private static final String LETTERS = "abcdefghijklmnopqrstuvwxyz";
-	private static final Random RANDOM = new Random(); 
+	private static final Random RANDOM = new Random();
+	private static final String ELIGIBLE_CELL_LETTERS = "ABCDEFGH";
 	
 
 	public static String getNewGameId() {
@@ -88,6 +89,19 @@ public class GameUtils {
 		}
 		
 		return null;
+	}
+	
+	//to determine the next move of the computer
+	public static String getNextGameMove() {
+		StringBuilder sb = new StringBuilder();
+		
+		//cell row position
+		sb.append(ELIGIBLE_CELL_LETTERS.charAt(RANDOM.nextInt(ELIGIBLE_CELL_LETTERS.length())));
+		
+		//cell column position
+		sb.append(ELIGIBLE_CELL_LETTERS.charAt(RANDOM.nextInt(ELIGIBLE_CELL_LETTERS.length())));
+		
+		return sb.toString();
 	}
 	
 	

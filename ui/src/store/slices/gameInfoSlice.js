@@ -1,7 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-    gameId: null
+    gameId: null,
+    shipCollectionPlayer1: null,
+    hitCells: []
 }
 
 export const gameInfoSlice = createSlice({

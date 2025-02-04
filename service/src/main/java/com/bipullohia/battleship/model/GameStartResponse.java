@@ -7,6 +7,7 @@ public class GameStartResponse {
 	
 	private String gameId;
 	private String gameSetupStatus;
+	private ShipCollection shipCollectionPlayer1;
 
 	public String getGameSetupStatus() {
 		return gameSetupStatus;
@@ -22,6 +23,14 @@ public class GameStartResponse {
 
 	public void setGameId(String gameId) {
 		this.gameId = gameId;
+	}
+
+	public ShipCollection getShipCollectionPlayer1() {
+		return shipCollectionPlayer1;
+	}
+
+	public void setShipCollectionPlayer1(ShipCollection shipCollectionPlayer1) {
+		this.shipCollectionPlayer1 = shipCollectionPlayer1;
 	}
 	
 }

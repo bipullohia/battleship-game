@@ -50,6 +50,7 @@ const PrimaryPlayerGrid = () => {
     return (
         <div className="container-fluid mt-4">
             <h5 className="fw-bold">Opponent's battlefield</h5>
+            <div className="fw-light">It has the ships placed by the opponent</div>
             <div className="row mt-3 mb-1">
                 <div className="col-6 mx-auto">
                     <table onMouseOut={() => setHoveredCell(null)} className="table table-bordered table-info">
